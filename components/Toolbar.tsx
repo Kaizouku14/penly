@@ -62,8 +62,8 @@ export const Toolbar = ({
           ) : null}
         </div>
 
-        {/* Action buttons - desktop only */}
-        <div className="hidden lg:flex items-center gap-1">
+        {/* Action buttons */}
+        <div className="flex items-center gap-1">
           {canUndo && onUndo && (
             <Button
               onClick={onUndo}
@@ -73,7 +73,7 @@ export const Toolbar = ({
               title="Undo paraphrase"
             >
               <RotateCcw className="size-4" />
-              Undo
+              <span className="hidden lg:block">Undo</span>
             </Button>
           )}
 
@@ -85,7 +85,7 @@ export const Toolbar = ({
             disabled={!hasText}
           >
             <Trash2 className="size-4" />
-            Clear
+            <span className="hidden lg:block">Clear</span>
           </Button>
           <Button
             onClick={handleCopy}
@@ -95,7 +95,9 @@ export const Toolbar = ({
             disabled={!hasText}
           >
             <Copy className="size-4" />
-            {copied ? "Copied" : "Copy"}
+            <span className="hidden lg:block">
+              {copied ? "Copied" : "Copy"}
+            </span>
           </Button>
           {onParaphrase && onAiDetect && (
             <ToolsMenu

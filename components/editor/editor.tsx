@@ -22,8 +22,11 @@ interface EditorProps {
 export const Editor = ({ onTextChange }: EditorProps) => {
   const [text, setText] = React.useState("");
   const [selectedMatch, setSelectedMatch] = React.useState<Match | null>(null);
-  const [paraphraseHistory, setParaphraseHistory] = React.useState<string | null>(null);
-  const [isParaphraseDialogOpen, setIsParaphraseDialogOpen] = React.useState(false);
+  const [paraphraseHistory, setParaphraseHistory] = React.useState<
+    string | null
+  >(null);
+  const [isParaphraseDialogOpen, setIsParaphraseDialogOpen] =
+    React.useState(false);
   const [isAiDetectDialogOpen, setIsAiDetectDialogOpen] = React.useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -32,13 +35,8 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const { result, isChecking } = useGrammarCheck(text);
   const { tone, isAnalyzing } = useToneAnalysis(text);
   const { paraphrase, isParaphrasing, fetchParaphrase } = useParaphrase(text);
-  const {
-    isAiGenerated,
-    confidence,
-    analysis,
-    isDetecting,
-    fetchAiDetect,
-  } = useAiDetect(text);
+  const { isAiGenerated, confidence, analysis, isDetecting, fetchAiDetect } =
+    useAiDetect(text);
   const errorCount = result?.length ?? 0;
 
   // Sync scroll position between textarea and highlight layer

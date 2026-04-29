@@ -3,19 +3,10 @@
 import React from "react";
 import { Editor } from "@/components/editor/editor";
 import { WritingDNA } from "@/components/WritingDNA";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { WritingDNABottomSheet } from "@/components/WritingDNABottomSheet";
 
 export default function Home() {
   const [text, setText] = React.useState("");
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-  };
-
-  const handleClear = () => {
-    setText("");
-  };
 
   return (
     <div className="min-h-screen flex flex-col py-6 px-4 md:px-6 lg:px-8 bg-background">
@@ -33,7 +24,6 @@ export default function Home() {
 
       {/* Mobile-only components */}
       <WritingDNABottomSheet text={text} />
-      <FloatingActionButton onCopy={handleCopy} onClear={handleClear} />
     </div>
   );
 }
