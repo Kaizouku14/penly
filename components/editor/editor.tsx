@@ -3,14 +3,16 @@
 import React from "react";
 import { Textarea } from "../ui/textarea";
 import { highlightText } from "./helper";
-import { ClarityLayer } from "@/components/ClarityLayer";
-import { ClarityLegend } from "@/components/ClarityLegend";
 import { ToneBar } from "@/components/ToneBar";
 import { Match } from "@/types/match";
 import { useGrammarCheck } from "@/hooks/useGrammarCheck";
 import { useToneAnalysis } from "@/hooks/useToneAnalysis";
+import { useParaphrase } from "@/hooks/useParaphrase";
+import { useAiDetect } from "@/hooks/useAiDetect";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { Toolbar } from "@/components/Toolbar";
+import { ParaphraseDialog } from "@/components/ParaphraseDialog";
+import { AIDetectDialog } from "@/components/AIDetectDialog";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface EditorProps {
@@ -20,22 +22,28 @@ interface EditorProps {
 export const Editor = ({ onTextChange }: EditorProps) => {
   const [text, setText] = React.useState("");
   const [selectedMatch, setSelectedMatch] = React.useState<Match | null>(null);
+  const [paraphraseHistory, setParaphraseHistory] = React.useState<string | null>(null);
+  const [isParaphraseDialogOpen, setIsParaphraseDialogOpen] = React.useState(false);
+  const [isAiDetectDialogOpen, setIsAiDetectDialogOpen] = React.useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const clarityLayerRef = React.useRef<HTMLDivElement>(null);
   const highlightLayerRef = React.useRef<HTMLDivElement>(null);
 
   const { result, isChecking } = useGrammarCheck(text);
   const { tone, isAnalyzing } = useToneAnalysis(text);
+  const { paraphrase, isParaphrasing, fetchParaphrase } = useParaphrase(text);
+  const {
+    isAiGenerated,
+    confidence,
+    analysis,
+    isDetecting,
+    fetchAiDetect,
+  } = useAiDetect(text);
   const errorCount = result?.length ?? 0;
 
-  // Sync scroll position between textarea and overlay layers
+  // Sync scroll position between textarea and highlight layer
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
     const target = e.target as HTMLTextAreaElement;
-    if (clarityLayerRef.current) {
-      clarityLayerRef.current.scrollTop = target.scrollTop;
-      clarityLayerRef.current.scrollLeft = target.scrollLeft;
-    }
     if (highlightLayerRef.current) {
       highlightLayerRef.current.scrollTop = target.scrollTop;
       highlightLayerRef.current.scrollLeft = target.scrollLeft;
@@ -66,32 +74,53 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     setSelectedMatch(null);
   };
 
+  const handleParaphrase = async () => {
+    setIsParaphraseDialogOpen(true);
+    await fetchParaphrase();
+  };
+
+  const handleApplyParaphrase = (paraphrasedText: string) => {
+    // Save current text for undo
+    setParaphraseHistory(text);
+    setText(paraphrasedText);
+    onTextChange?.(paraphrasedText);
+    setSelectedMatch(null);
+  };
+
+  const handleUndoParaphrase = () => {
+    if (paraphraseHistory) {
+      setText(paraphraseHistory);
+      onTextChange?.(paraphraseHistory);
+      setParaphraseHistory(null);
+    }
+  };
+
+  const handleAiDetect = async () => {
+    setIsAiDetectDialogOpen(true);
+    await fetchAiDetect();
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Toolbar */}
       <Toolbar
         text={text}
         onClear={handleClear}
+        onParaphrase={handleParaphrase}
+        onAiDetect={handleAiDetect}
+        onUndo={paraphraseHistory ? handleUndoParaphrase : undefined}
+        canUndo={paraphraseHistory !== null}
         isChecking={isChecking}
         errorCount={errorCount}
       />
 
       {/* Editor container */}
       <div className="relative w-full h-56 lg:h-80 rounded-md border border-border bg-background shadow-sm overflow-hidden">
-        {/* Clarity Layer - shows sentence clarity indicators */}
-        <div
-          ref={clarityLayerRef}
-          aria-hidden="true"
-          className="absolute inset-0 p-3 font-mono text-sm break-words overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
-        >
-          <ClarityLayer text={text} />
-        </div>
-
         {/* Grammar Highlight Layer */}
         <div
           ref={highlightLayerRef}
           aria-hidden="true"
-          className="absolute inset-0 p-3 font-mono text-sm break-words overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
+          className="absolute inset-0 p-3 font-mono text-sm wrap-break-word overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
         >
           {highlightText(text, result ?? [], selectedMatch, setSelectedMatch)}
         </div>
@@ -102,7 +131,7 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           className="absolute inset-0 p-3 w-full h-full font-mono text-sm
             bg-transparent text-foreground caret-foreground
             border-none resize-none outline-none focus-visible:ring-0
-            leading-relaxed break-words"
+            leading-relaxed wrap-break-word"
           value={text}
           placeholder={
             isMobile
@@ -114,9 +143,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           spellCheck={false}
         />
       </div>
-
-      {/* Clarity Legend */}
-      {text.trim().length > 0 && <ClarityLegend />}
 
       {/* Feedback Panel - always visible */}
       <FeedbackPanel
@@ -138,6 +164,25 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           {text.trim().split(/\s+/).length} words · {text.length} characters
         </p>
       )}
+
+      {/* Paraphrase Dialog */}
+      <ParaphraseDialog
+        isOpen={isParaphraseDialogOpen}
+        isLoading={isParaphrasing}
+        paraphrase={paraphrase}
+        onClose={() => setIsParaphraseDialogOpen(false)}
+        onApply={handleApplyParaphrase}
+      />
+
+      {/* AI Detect Dialog */}
+      <AIDetectDialog
+        isOpen={isAiDetectDialogOpen}
+        isLoading={isDetecting}
+        isAiGenerated={isAiGenerated}
+        confidence={confidence}
+        analysis={analysis}
+        onClose={() => setIsAiDetectDialogOpen(false)}
+      />
     </div>
   );
 };

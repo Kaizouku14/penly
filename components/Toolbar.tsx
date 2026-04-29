@@ -2,11 +2,16 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, RotateCcw } from "lucide-react";
+import { ToolsMenu } from "@/components/ToolsMenu";
 
 interface ToolbarProps {
   text: string;
   onClear: () => void;
+  onUndo?: () => void;
+  onParaphrase?: () => void;
+  onAiDetect?: () => void;
+  canUndo?: boolean;
   isChecking?: boolean;
   errorCount?: number;
 }
@@ -14,6 +19,10 @@ interface ToolbarProps {
 export const Toolbar = ({
   text,
   onClear,
+  onUndo,
+  onParaphrase,
+  onAiDetect,
+  canUndo = false,
   isChecking = false,
   errorCount = 0,
 }: ToolbarProps) => {
@@ -55,6 +64,19 @@ export const Toolbar = ({
 
         {/* Action buttons - desktop only */}
         <div className="hidden lg:flex items-center gap-1">
+          {canUndo && onUndo && (
+            <Button
+              onClick={onUndo}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              title="Undo paraphrase"
+            >
+              <RotateCcw className="size-4" />
+              Undo
+            </Button>
+          )}
+
           <Button
             onClick={onClear}
             variant="outline"
@@ -75,6 +97,13 @@ export const Toolbar = ({
             <Copy className="size-4" />
             {copied ? "Copied" : "Copy"}
           </Button>
+          {onParaphrase && onAiDetect && (
+            <ToolsMenu
+              onParaphrase={onParaphrase}
+              onAiDetect={onAiDetect}
+              hasText={hasText}
+            />
+          )}
         </div>
       </div>
     </div>

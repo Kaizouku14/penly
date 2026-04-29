@@ -4,7 +4,6 @@ import React from "react";
 import { Match, Category } from "@/types/match";
 import { Button } from "@/components/ui/button";
 import { useFeedback } from "@/hooks/useFeedback";
-import { useRewrite } from "@/hooks/useRewrite";
 import {
   getCategoryFromIssueType,
   getCategoryLabel,
@@ -45,7 +44,6 @@ export const FeedbackPanel = ({
     : null;
 
   const { explanation, isLoading } = useFeedback(selectedMatch, errorText);
-  const { rewritten, isRewriting } = useRewrite(selectedMatch, text);
 
   // Filter errors by category
   const filteredErrors = React.useMemo(() => {
@@ -118,36 +116,6 @@ export const FeedbackPanel = ({
           <div className="mt-2 pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground animate-pulse">
               Getting explanation...
-            </p>
-          </div>
-        )}
-
-        {rewritten && (
-          <div className="mt-2 pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground mb-2">Rewritten sentence:</p>
-            <p className="text-xs bg-background p-2 rounded border border-border text-foreground leading-relaxed">
-              {rewritten}
-            </p>
-            <Button
-              onClick={() => {
-                onApplySuggestion(
-                  rewritten,
-                  selectedMatch.offset,
-                  selectedMatch.length,
-                );
-              }}
-              className="mt-2 px-2 py-0.5 text-xs rounded border border-border
-              bg-background hover:bg-accent transition-colors text-foreground w-full"
-            >
-              Apply rewrite
-            </Button>
-          </div>
-        )}
-
-        {isRewriting && (
-          <div className="mt-2 pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground animate-pulse">
-              Rewriting sentence...
             </p>
           </div>
         )}

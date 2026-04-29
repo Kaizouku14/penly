@@ -17,5 +17,14 @@ export const POST = async (req: NextRequest) => {
 
   const data = await response.json();
 
-  return NextResponse.json(data);
+  // Filter out UNKNOWN_TOKEN errors (flags unknown words/names as mistakes)
+  // while keeping actual grammar and spelling errors
+  const filteredMatches = data.matches.filter(
+    (match: any) => match.rule.id !== "UNKNOWN_TOKEN"
+  );
+
+  return NextResponse.json({
+    ...data,
+    matches: filteredMatches,
+  });
 };

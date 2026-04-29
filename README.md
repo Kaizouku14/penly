@@ -1,14 +1,34 @@
-# Grammar Checker App — Full Build Prompt
+# Penly — AI-Powered Writing Assistant
 
 ## What to Build
-A single-page, full-stack grammar checker web app. Clean and professional like Notion.
+A single-page, full-stack grammar checker and writing assistant web app. Clean and professional like Notion.
+Features include grammar checking, AI-powered explanations, tone detection, paraphrasing, and AI-generated content detection.
 No auth, no database, no multiple pages.
+
+---
+
+## Features
+
+### Core Features
+- ✅ **Grammar & Spelling Check** — Real-time error detection using LanguageTool
+- ✅ **Error Categorization** — Spelling, Grammar, Punctuation, Style filters
+- ✅ **AI Explanations** — Why each error matters (powered by Groq)
+- ✅ **Quick Fixes** — One-click suggestions for each error
+- ✅ **Tone Analysis** — Detects writing tone (formal, casual, confident, etc.)
+- ✅ **Writing DNA** — Vocabulary richness, sentence length, passive voice %, reading level
+
+### Advanced Features
+- ✅ **Paraphrase** — AI-powered text rephrasing with undo support
+- ✅ **AI Content Detection** — Detects if text is AI-generated with confidence scores
+- ✅ **Tools Dropdown Menu** — Organized UI for Paraphrase & Check AI features
+- ✅ **Undo for Paraphrase** — One-level undo for paraphrase changes
+- ✅ **CEFR Reading Level** — Maps reading complexity to international standards
 
 ---
 
 ## Tech Stack
 - Next.js 14+ (App Router) + TypeScript
-- Tailwind CSS + shadcn/ui
+- Tailwind CSS + shadcn/ui (Dialog, Card, Button, Progress, DropdownMenu)
 - LanguageTool free API (no key needed)
 - Groq API (`GROQ_API_KEY` in `.env.local`, server-side only)
 
@@ -16,13 +36,14 @@ No auth, no database, no multiple pages.
 
 ## Project Structure
 ```
-grammar-checker/
+penly/
 ├── app/
 │   ├── api/
-│   │   ├── grammar/route.ts
-│   │   ├── feedback/route.ts
-│   │   ├── tone/route.ts
-│   │   └── rewrite/route.ts
+│   │   ├── grammar/route.ts          # Grammar check proxy
+│   │   ├── feedback/route.ts         # AI explanations
+│   │   ├── tone/route.ts             # Tone analysis
+│   │   ├── paraphrase/route.ts       # Text paraphrasing
+│   │   └── ai-detect/route.ts        # AI content detection
 │   ├── page.tsx
 │   ├── layout.tsx
 │   └── globals.css
@@ -30,22 +51,31 @@ grammar-checker/
 │   ├── editor/
 │   │   ├── editor.tsx
 │   │   └── helper.tsx
-│   ├── ClarityLayer.tsx
+│   ├── ui/                           # shadcn components
+│   │   ├── dialog.tsx
+│   │   ├── card.tsx
+│   │   ├── button.tsx
+│   │   ├── progress.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   └── ...
 │   ├── FeedbackPanel.tsx
 │   ├── WritingDNA.tsx
 │   ├── WritingDNABottomSheet.tsx
 │   ├── ToneBar.tsx
 │   ├── Toolbar.tsx
+│   ├── ToolsMenu.tsx                 # Dropdown for Paraphrase & AI Check
+│   ├── ParaphraseDialog.tsx          # Paraphrase UI (shadcn Dialog)
+│   ├── AIDetectDialog.tsx            # AI detection UI (shadcn Dialog)
 │   └── FloatingActionButton.tsx
 ├── hooks/
 │   ├── useGrammarCheck.ts
 │   ├── useFeedback.ts
-│   ├── useRewrite.ts
+│   ├── useParaphrase.ts              # Paraphrase hook
+│   ├── useAiDetect.ts                # AI detection hook
 │   ├── useToneAnalysis.ts
 │   ├── useWritingDNA.ts
 │   └── useMediaQuery.ts
 ├── lib/
-│   ├── clarity.ts
 │   └── utils.ts
 ├── types/
 │   └── match.ts
@@ -93,40 +123,38 @@ export type ToneResult = {
 ### `app/api/grammar/route.ts`
 - POST — receives `{ text: string }`
 - Proxies to `https://api.languagetool.org/v2/check`
-- Body: `application/x-www-form-urlencoded` with `{ text, language: "en-US" }`
-- Returns the LanguageTool JSON response as-is
-- Use AbortController to cancel duplicate requests
+- Filters out `UNKNOWN_TOKEN` errors (prevents flagging names as mistakes)
+- Returns: `{ matches: Match[] }`
 
 ### `app/api/feedback/route.ts`
 - POST — receives `{ message: string, ruleDescription: string, errorText: string }`
-- Calls Groq (`llama3-8b-8192`) using `process.env.GROQ_API_KEY`
-- System prompt: `"You are a helpful English writing assistant. Explain grammar errors in simple, friendly language in 2-3 sentences."`
-- User prompt: `Explain this grammar error: "${message}" for the word/phrase "${errorText}". Rule: ${ruleDescription}`
-- Returns `{ explanation: string }`
+- Calls Groq (`llama-3.3-70b-versatile`)
+- Returns: `{ explanation: string }`
 
 ### `app/api/tone/route.ts`
 - POST — receives `{ text: string }`
-- Calls Groq (`llama3-8b-8192`) using `process.env.GROQ_API_KEY`
-- System prompt: `"You are a writing tone analyzer. Respond ONLY with valid JSON — no markdown, no backticks, no explanation."`
-- User prompt:
-```
-Analyze the tone and return ONLY this JSON shape:
-{
-  "primary": "one of: formal, casual, confident, uncertain, positive, negative, neutral",
-  "secondary": "one of the remaining tones or null",
-  "summary": "one sentence describing the tone in plain English"
-}
-Text: "${text}"
-```
-- Parse response safely with try/catch
-- Returns `{ primary, secondary, summary }` or 400 on parse failure
+- Calls Groq (`llama-3.3-70b-versatile`)
+- Returns: `{ primary: Tone, secondary: Tone | null, summary: string }`
 
-### `app/api/rewrite/route.ts`
-- POST — receives `{ text: string, errorOffset: number, errorLength: number, suggestion: string }`
-- Calls Groq (`llama3-8b-8192`) using `process.env.GROQ_API_KEY`
-- System prompt: `"You are a helpful writing assistant. Rewrite the sentence naturally and clearly, maintaining the original meaning and context. Respond only with the rewritten sentence."`
-- User prompt: `Rewrite this sentence naturally: "${before}[${suggestion}]${after}"\n\nContext before: "${contextBefore}"\nContext after: "${contextAfter}"\n\nKeep it concise and clear."`
-- Returns `{ rewritten: string }` — the full rewritten sentence using context
+### `app/api/paraphrase/route.ts`
+- POST — receives `{ text: string }`
+- Calls Groq (`llama-3.3-70b-versatile`)
+- Generates alternative wording for any text
+- Returns: `{ paraphrase: string }`
+- Minimum 10 characters required
+
+### `app/api/ai-detect/route.ts`
+- POST — receives `{ text: string }`
+- Calls Groq (`llama-3.3-70b-versatile`) to analyze if text is AI-generated
+- Analyzes: formal tone, repetitive phrasing, perfect grammar, generic language
+- Returns:
+```ts
+{
+  isAiGenerated: boolean;
+  confidence: number;      // 0-100
+  analysis: string;        // Brief explanation
+}
+```
 
 ---
 
@@ -138,14 +166,23 @@ Text: "${text}"
 - Uses `AbortController` to cancel previous requests
 - Calls `POST /api/grammar`
 - Returns `{ result: Match[] | null, isChecking: boolean }`
-- Only fires when debounced text is 3+ characters
-- Wraps `setIsChecking(true)` in `setTimeout(..., 0)` — never synchronous in effect body
-- Silently swallows `AbortError`
 
 ### `useFeedback.ts`
 - Accepts `match: Match | null` and `errorText: string`
 - Calls `POST /api/feedback` when match is selected
 - Returns `{ explanation: string | null, isLoading: boolean }`
+
+### `useParaphrase.ts`
+- Accepts `text: string`
+- Exposes `fetchParaphrase()` callback for on-demand paraphrasing
+- Minimum 10 characters to trigger
+- Returns `{ paraphrase: string | null, isParaphrasing: boolean, fetchParaphrase: () => Promise<void> }`
+
+### `useAiDetect.ts`
+- Accepts `text: string`
+- Exposes `fetchAiDetect()` callback for on-demand AI detection
+- Minimum 10 characters to trigger
+- Returns `{ isAiGenerated: boolean | null, confidence: number | null, analysis: string | null, isDetecting: boolean, fetchAiDetect: () => Promise<void> }`
 
 ### `useToneAnalysis.ts`
 - Accepts `text: string`
@@ -154,233 +191,87 @@ Text: "${text}"
 - Calls `POST /api/tone`
 - Returns `{ tone: ToneResult | null, isAnalyzing: boolean }`
 
-### `useRewrite.ts`
-- Accepts `match: Match | null` and `text: string`
-- Calls `POST /api/rewrite` when match is selected
-- Passes error context to AI for natural rewriting
-- Returns `{ rewritten: string | null, isRewriting: boolean }`
-
 ### `useWritingDNA.ts`
 - Accepts `text: string`
-- Debounces 300ms — all calculations are client-side, no API
+- Debounces 300ms — all calculations are client-side
 - Only computes when word count >= 30
-- Returns:
-```ts
-{
-  vocabularyRichness: number;       // 0–100 (type-token ratio)
-  avgSentenceLength: number;        // word count per sentence
-  passivePercent: number;           // 0–100
-  gradeLevel: number;               // Flesch-Kincaid grade
-  gradLabel: string;                // old format (deprecated)
-  personality: { label: string; description: string };
-  isReady: boolean;                 // true when word count >= 30
-}
-```
+- Returns vocabulary richness, sentence length, passive voice %, grade level
 
 ### `useMediaQuery.ts`
-```ts
-export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState(false);
-  React.useEffect(() => {
-    const media = window.matchMedia(query);
-    setMatches(media.matches);
-    const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
-    media.addEventListener("change", listener);
-    return () => media.removeEventListener("change", listener);
-  }, [query]);
-  return matches;
-}
-```
-
----
-
-## `lib/clarity.ts` (all client-side, no API)
-
-```ts
-// Split text into sentences
-export function splitIntoSentences(text: string): string[]
-
-// Syllable count per word (for Flesch-Kincaid)
-export function syllableCount(word: string): number
-
-// Clarity score per sentence (0–100)
-export function getSentenceClarity(sentence: string): number
-// Factors: sentence length penalty, avg word length, passive voice, filler words
-
-// Map clarity score to Tailwind color class
-export function getClarityColor(score: number): string
-// 80–100 → "border-emerald-400" | 60–79 → "border-amber-400" | 0–59 → "border-red-400"
-
-// Map LanguageTool issueType to Category
-export function getCategoryFromIssueType(issueType: string): Category
-// "misspelling" → "spelling" | "grammar" → "grammar"
-// "typographical" → "punctuation" | "style"/"register" → "style" | else → "other"
-
-// Writing personality from combined metrics
-export function getWritingPersonality(
-  richness: number, avgLen: number, passive: number, grade: number
-): { label: string; description: string }
-// "Sharp Communicator" | "Academic Writer" | "Conversational"
-// "Formal Reporter" | "Deep Thinker" | "Balanced Writer"
-
-// Extract sentence at a given character offset
-export function getSentenceAtOffset(
-  text: string, offset: number
-): { sentence: string; start: number; end: number }
-
-// CEFR mapping from grade level
-export function getGradeLabel(grade: number): string
-```
-
----
-
-## `lib/utils.ts`
-
-```ts
-export interface CEFRLevel {
-  level: string;
-  label: string;
-}
-
-export function gradeToCEFR(grade: number): CEFRLevel
-// ≤3 → { level: "A1", label: "Beginner" }
-// ≤5 → { level: "A2", label: "Elementary" }
-// ≤7 → { level: "B1", label: "Intermediate" }
-// ≤10 → { level: "B2", label: "Upper Intermediate" }
-// ≤13 → { level: "C1", label: "Advanced" }
-// 14+ → { level: "C2", label: "Mastery" }
-```
+- Media query hook for responsive design
+- Returns `boolean` based on media query match
 
 ---
 
 ## Components
 
 ### `Editor.tsx` (`components/editor/editor.tsx`)
-- `"use client"` — three absolutely stacked layers inside a relative container
-- Layer 1 (bottom): ClarityLayer with `pointer-events: none`
-- Layer 2 (middle): HighlightLayer with `pointer-events: none`
-- Layer 3 (top): Textarea with `text-transparent caret-foreground bg-transparent resize-none`
-- All layers: identical font, size, padding, line-height, word-break — must be pixel-perfect
-- Use `w-full h-full` — never fixed `size-96` or `w-96`
-- Height: `h-56 lg:h-80`
-- **Scroll sync**: Textarea `onScroll` handler syncs `scrollTop`/`scrollLeft` to overlay layers via refs
-- Both overlay layers: `overflow-hidden` (no independent scrolling)
+- `"use client"` — two absolutely stacked layers inside a relative container
+- Layer 1 (bottom): HighlightLayer with `pointer-events: none`
+- Layer 2 (top): Textarea with `text-transparent caret-foreground bg-transparent`
+- **Scroll sync**: Textarea `onScroll` handler syncs to highlight layer
+- Manages state for:
+  - Grammar errors and selected match
+  - Paraphrase history (for undo)
+  - Dialog visibility (Paraphrase & AI Detect)
 
-### `ClarityLayer.tsx`
-- Wraps each sentence in a `<span>` with a colored left border based on clarity score
-- `pointer-events: none` — decorative only
-- Uses `getSentenceClarity()` and `getClarityColor()` from `lib/clarity.ts`
+### `Toolbar.tsx`
+- Status indicator: pulsing dot (checking) | green dot (clean) | red dot + count (errors)
+- Actions: Undo (only for paraphrase), Tools (dropdown), Clear, Copy
+- Tools dropdown contains: Paraphrase, Check AI Content
+- Mobile: compact header | Desktop: full button bar
+
+### `ToolsMenu.tsx`
+- Dropdown menu using shadcn `DropdownMenu`
+- Single button with `⋯` icon
+- Menu items: Paraphrase, Check AI Content
+- Only enabled when text is present
+- Automatically closes after selection
+
+### `ParaphraseDialog.tsx`
+- Modal dialog using shadcn `Dialog` component
+- Displays paraphrased text with loading state
+- Apply & Cancel buttons
+- Undo button appears in Toolbar after applying
+
+### `AIDetectDialog.tsx`
+- Modal dialog using shadcn `Dialog` component
+- Shows detection result with status badge (✅ Human / ⚠️ AI)
+- Confidence score with shadcn `Progress` bar (colored red/amber/green)
+- Brief analysis explanation
+- Clean, professional layout
 
 ### `FeedbackPanel.tsx`
 - Filter bar: All · Spelling · Grammar · Punctuation · Style
-  - Mobile: `overflow-x-auto flex gap-2 scrollbar-none`
-  - Desktop: wrapping pills
-- Error list: clickable buttons showing error word (red) + truncated message
+- Error list: clickable buttons with error word and message
 - Selected match shows:
-  - Rule description, full message
-  - Up to 5 suggestion buttons (apply fix directly)
-  - AI explanation from `useFeedback` shown below suggestions
-  - **Rewritten sentence** from `useRewrite` with "Apply rewrite" button
-- Mobile: `max-h-72 overflow-y-auto` | Desktop: `max-h-72 overflow-y-auto`
+  - Rule description & full message
+  - Up to 5 suggestion buttons
+  - AI explanation
+- Clean categorization and filtering
 
-### `WritingDNA.tsx`
-- Only renders when `isReady` is true (30+ words)
-- Shows placeholder message when not ready (< 30 words)
-- Layout (Notion-style, clean):
-```
-✦ Writing DNA
-
-[Personality label — large, bold]
-[Personality description — muted]
-
-Vocabulary richness
-████████░░  73% — Varied
-
-Avg sentence length
-14 words — Short & punchy
-
-Passive voice
-██░░░░░░░░  8% — Active voice
-
-Reading level
-C1 · Advanced
-```
-- Progress bars: `h-1 rounded-full bg-muted` track with colored fill
-- Animate metric values with count-up on first render using `requestAnimationFrame`
-- Personality badge has a colored left border accent
-- CEFR level displays using `gradeToCEFR()` from `lib/utils.ts`
-
-### `WritingDNABottomSheet.tsx` (mobile only — `lg:hidden`)
-- Trigger: pill button fixed at `bottom-20 left-1/2 -translate-x-1/2` showing personality label + `↑`
-- Sheet: slides up from bottom, `h-[60vh]`, `rounded-t-2xl`, drag handle bar at top
-- Backdrop closes the sheet on tap
-- Renders `<WritingDNA />` inside
+### `WritingDNA.tsx` & `WritingDNABottomSheet.tsx`
+- Shows: Vocabulary richness, sentence length, passive voice %, CEFR reading level
+- Uses shadcn `Progress` component for metrics
+- Mobile bottom sheet | Desktop sidebar
 
 ### `ToneBar.tsx`
-- Only shows when `tone` is not null
-- Primary tone colored pill + optional secondary pill + one-sentence summary
-- Tone badge colors: formal → blue | casual → green | confident → purple | uncertain → amber | positive → emerald | negative → red | neutral → gray
-- "Analyzing tone..." placeholder when `isAnalyzing` and word count is 30+
-- Hides entirely below 30 words
-- Badges wrap with `flex-wrap` on narrow screens
-
-### `Toolbar.tsx`
-- Mobile: inline header, `bg-background`, app name left + status right, hide Clear/Copy buttons
-- Desktop: (`lg:flex`) shows all buttons (Copy, Clear)
-- Status indicator: pulsing amber dot (checking) | green dot (clean) | red dot + count (errors)
-
-### `FloatingActionButton.tsx` (mobile only — `lg:hidden`)
-- Fixed `bottom-4 right-4`, circular `w-12 h-12 rounded-full bg-foreground text-background`
-- Tap to expand action menu above it: Copy text + Clear text
-- Menu animates with `scale` + `opacity` transition
-- Shows `⋯` when closed, `×` when open
+- Displays primary & secondary tone with badges
+- One-sentence tone summary
+- Only shows when word count >= 30
 
 ---
 
-## Page Layout (`app/page.tsx`)
+## Dialogs & UI Components
 
-### Mobile (default)
-Single column, top to bottom:
-1. `<Toolbar />` (sticky, desktop buttons hidden)
-2. `<Editor />`
-3. `<FeedbackPanel />`
-4. `<ToneBar />`
-5. `<WritingDNABottomSheet />` (fixed, triggered by pill)
-6. `<FloatingActionButton />` (fixed)
+### Using shadcn Components
+- **Dialog**: `ParaphraseDialog`, `AIDetectDialog`
+- **Progress**: Confidence bar in `AIDetectDialog`
+- **DropdownMenu**: Tools menu in `Toolbar`
+- **Button**: All interactive elements
+- **Card**: (Available for future layouts)
 
-### Desktop (`lg:`)
-Flex or grid with sidebar:
-- Main area: Toolbar (inline) + Editor + FeedbackPanel + ToneBar
-- Sidebar (sticky): WritingDNA
-
----
-
-## Helper Functions (`components/editor/helper.tsx`)
-
-```ts
-export function useDebounce<T>(value: T, delay: number): T
-
-export function getCategoryFromIssueType(issueType: string): Category
-
-export function getDecorationColorClass(category: Category): string
-
-export function getCategoryBgClass(category: Category): string
-
-export function getCategoryLabel(category: Category): string
-
-export function highlightText(
-  text: string,
-  matches: Match[],
-  selectedMatch: Match | null,
-  onSelect: (match: Match) => void
-): React.ReactNode[]
-// Renders text with error underlining, clickable marks, selection highlighting
-
-export function getSentenceAtOffset(
-  text: string,
-  offset: number
-): { sentence: string; start: number; end: number }
-```
+All dialogs use shadcn's `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter` components for consistency and accessibility.
 
 ---
 
@@ -388,12 +279,35 @@ export function getSentenceAtOffset(
 1. **No API keys in the browser** — Groq key only used in `/api/*` route handlers
 2. **No setState synchronously in useEffect** — always wrap in `setTimeout(..., 0)` or call inside `.then()`
 3. **Always use AbortController** for grammar check — silently swallow AbortError
-4. **Editor layers must be pixel-perfect** — identical font, padding, line-height on all three layers
-5. **Writing DNA is 100% client-side** — no API calls, no Groq, pure JS math in `lib/clarity.ts`
+4. **Editor layers must be pixel-perfect** — identical font, padding, line-height
+5. **Writing DNA is 100% client-side** — no API calls, pure JS math
 6. **All Groq JSON responses** must be parsed inside try/catch
-7. **No fixed widths on editor** — always `w-full h-full`
-8. **Mobile-first** — base Tailwind classes for mobile, `lg:` for desktop enhancement
+7. **No fixed widths on editor** — always `w-full`
+8. **Mobile-first** — base Tailwind classes for mobile, `lg:` for desktop
 9. **No `overflow: hidden` on page body** — breaks sticky toolbar
 10. **No `any` types** — TypeScript strict mode throughout
-11. **Scroll sync required** — textarea `onScroll` handler must sync overlay layers
-12. **All layers must use identical styling** — font-mono, text-sm, p-3, break-words, leading-relaxed
+11. **Scroll sync required** — textarea `onScroll` handler syncs overlay layers
+12. **Filter UNKNOWN_TOKEN from grammar results** — prevents flagging names as errors
+13. **Undo only for paraphrase** — no undo for direct error fixes
+14. **Use shadcn components** — Dialog, Progress, DropdownMenu for consistency
+
+---
+
+## Environment Setup
+
+Create `.env.local`:
+```
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Install dependencies:
+```bash
+npm install
+```
+
+Run development server:
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
