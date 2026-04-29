@@ -9,9 +9,7 @@ import {
   getCategoryFromIssueType,
   getCategoryLabel,
   getCategoryBgClass,
-  getSentenceAtOffset,
 } from "@/components/editor/helper";
-import { ScrollArea } from "./ui/scroll-area";
 
 interface FeedbackPanelProps {
   result: Match[] | null;
@@ -32,9 +30,7 @@ export const FeedbackPanel = ({
   onSelectMatch,
   onApplySuggestion,
 }: FeedbackPanelProps) => {
-  const [activeFilter, setActiveFilter] = React.useState<Category | "all">(
-    "all",
-  );
+  const [activeFilter, setActiveFilter] = React.useState<Category | "all">("all");
   const errorCount = result?.length ?? 0;
 
   const errorText = selectedMatch
@@ -56,7 +52,7 @@ export const FeedbackPanel = ({
     if (!result) return [];
     if (activeFilter === "all") return result;
     return result.filter(
-      (m) => getCategoryFromIssueType(m.rule.issueType) === activeFilter,
+      (m) => getCategoryFromIssueType(m.rule.issueType) === activeFilter
     );
   }, [result, activeFilter]);
 
@@ -66,103 +62,96 @@ export const FeedbackPanel = ({
 
   if (selectedMatch) {
     return (
-      <ScrollArea className="h-72">
-        <div className="flex flex-col gap-3 h-auto rounded-md border border-border bg-muted/30 p-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <p className="text-xs font-semibold text-foreground">
-                {selectedMatch.rule?.description ?? "Grammar issue"}
-              </p>
-              {selectedCategory && (
-                <span
-                  className={`px-2 py-0.5 rounded text-xs font-medium ${getCategoryBgClass(selectedCategory)}`}
-                >
-                  {getCategoryLabel(selectedCategory)}
-                </span>
-              )}
+      <div className="flex flex-col gap-3 max-h-72 overflow-y-auto rounded-md border border-border bg-muted/30 p-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs font-semibold text-foreground">
+              {selectedMatch.rule?.description ?? "Grammar issue"}
+            </p>
+            {selectedCategory && (
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-medium ${getCategoryBgClass(selectedCategory)}`}
+              >
+                {getCategoryLabel(selectedCategory)}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {selectedMatch.message}
+          </p>
+        </div>
+
+        {selectedMatch.replacements &&
+          selectedMatch.replacements.length > 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Suggestions:</p>
+              <div className="flex flex-wrap gap-1">
+                {selectedMatch.replacements.slice(0, 5).map((r, i) => (
+                  <Button
+                    key={i}
+                    onClick={() =>
+                      onApplySuggestion(
+                        r.value,
+                        selectedMatch.offset,
+                        selectedMatch.length,
+                      )
+                    }
+                    className="px-2 py-0.5 text-xs rounded border border-border
+                    bg-background hover:bg-accent transition-colors text-foreground"
+                  >
+                    {r.value}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {selectedMatch.message}
+          )}
+
+        {explanation && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground leading-relaxed italic">
+              {explanation}
             </p>
           </div>
+        )}
 
-          {selectedMatch.replacements &&
-            selectedMatch.replacements.length > 0 && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Suggestions:
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {selectedMatch.replacements.slice(0, 5).map((r, i) => (
-                    <Button
-                      key={i}
-                      onClick={() =>
-                        onApplySuggestion(
-                          r.value,
-                          selectedMatch.offset,
-                          selectedMatch.length,
-                        )
-                      }
-                      className="px-2 py-0.5 text-xs rounded border border-border
-                    bg-background hover:bg-accent transition-colors text-foreground"
-                    >
-                      {r.value}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
+        {isLoading && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground animate-pulse">
+              Getting explanation...
+            </p>
+          </div>
+        )}
 
-          {explanation && (
-            <div className="mt-2 pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground leading-relaxed italic">
-                {explanation}
-              </p>
-            </div>
-          )}
+        {rewritten && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2">Rewritten sentence:</p>
+            <p className="text-xs bg-background p-2 rounded border border-border text-foreground leading-relaxed">
+              {rewritten}
+            </p>
+            <Button
+              onClick={() => {
+                onApplySuggestion(
+                  rewritten,
+                  selectedMatch.offset,
+                  selectedMatch.length,
+                );
+              }}
+              className="mt-2 px-2 py-0.5 text-xs rounded border border-border
+              bg-background hover:bg-accent transition-colors text-foreground w-full"
+            >
+              Apply rewrite
+            </Button>
+          </div>
+        )}
 
-          {isLoading && (
-            <div className="mt-2 pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground animate-pulse">
-                Getting explanation...
-              </p>
-            </div>
-          )}
-
-           {rewritten && (
-             <div className="mt-2 pt-2 border-t border-border">
-               <p className="text-xs text-muted-foreground mb-2">
-                 Rewritten sentence:
-               </p>
-               <p className="text-xs bg-background p-2 rounded border border-border text-foreground leading-relaxed">
-                 {rewritten}
-               </p>
-               <Button
-                 onClick={() => {
-                   const { start, end } = getSentenceAtOffset(text, selectedMatch.offset);
-                   onApplySuggestion(
-                     rewritten,
-                     start,
-                     end - start,
-                   );
-                 }}
-                 className="mt-2 px-2 py-0.5 text-xs rounded border border-border
-               bg-background hover:bg-accent transition-colors text-foreground w-full"
-               >
-                 Apply rewrite
-               </Button>
-             </div>
-           )}
-
-          {isRewriting && (
-            <div className="mt-2 pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground animate-pulse">
-                Rewriting sentence...
-              </p>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+        {isRewriting && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground animate-pulse">
+              Rewriting sentence...
+            </p>
+          </div>
+        )}
+      </div>
     );
   }
 

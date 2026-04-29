@@ -55,7 +55,7 @@ export const POST = async (
             },
             {
               role: "user",
-              content: `Rewrite only the bracketed part naturally to fit the context. Replace [${suggestion}] in: "${before}[${suggestion}]${after}"\n\nContext: "${contextBefore}" ... "${contextAfter}"\n\nRespond with ONLY the replacement word/phrase, nothing else.`,
+              content: `Rewrite this sentence naturally: "${before}[${suggestion}]${after}"\n\nContext before: "${contextBefore}"\nContext after: "${contextAfter}"\n\nKeep it concise and clear.`,
             },
           ],
           max_tokens: 200,
