@@ -1,7 +1,13 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Editor } from "@/components/editor/editor";
 import { WritingDNA } from "@/components/WritingDNA";
 import { WritingDNABottomSheet } from "@/components/WritingDNABottomSheet";
@@ -13,10 +19,10 @@ export default function Home() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header Section */}
       <Card className="border-b border-t-0 border-l-0 border-r-0 rounded-none">
-        <CardHeader className="py-6 px-4 md:px-6 lg:px-8">
+        <CardHeader className="px-4 md:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-2xl">✦</span>
-            <CardTitle className="text-2xl md:text-3xl font-heading">
+            <CardTitle className="text-2xl m  d:text-3xl font-heading">
               Penly
             </CardTitle>
           </div>

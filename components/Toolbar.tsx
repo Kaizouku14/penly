@@ -12,7 +12,8 @@ interface ToolbarProps {
   onUndo?: () => void;
   onParaphrase?: () => void;
   onAiDetect?: () => void;
-  onJobMode?: () => void;
+  onStartInterview?: () => void;
+  onStopInterview?: () => void;
   canUndo?: boolean;
   isChecking?: boolean;
   errorCount?: number;
@@ -25,7 +26,8 @@ export const Toolbar = ({
   onUndo,
   onParaphrase,
   onAiDetect,
-  onJobMode,
+  onStartInterview,
+  onStopInterview,
   canUndo = false,
   isChecking = false,
   errorCount = 0,
@@ -42,57 +44,50 @@ export const Toolbar = ({
   const hasText = text.trim().length > 0;
 
   return (
-    <div className="flex items-center justify-between w-full gap-4">
+    <div className="flex flex-col gap-3 w-full md:flex-row md:items-center md:justify-between">
       {/* Left: Title */}
       <h2 className="text-sm font-semibold tracking-wide text-foreground">
         Grammar Checker
       </h2>
 
-      {/* Right: Controls Group */}
-      <div className="flex items-center gap-3">
-        
-        {/* Status Badge */}
-        <div className="flex-shrink-0">
+      {/* Right: Controls Group - Responsive */}
+      <div className="flex flex-col gap-3 w-full md:w-auto md:flex-row md:items-center md:gap-3">
+        {/* Status Badge - Full width on mobile */}
+        <div className="shrink-0">
           {isJobMode ? (
-            <Badge 
-              variant="secondary" 
-              className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-0 gap-1.5"
-            >
+            <Badge variant="secondary" className="gap-1.5 text-blue-400 w-full md:w-auto justify-center">
               <span className="size-1.5 rounded-full bg-blue-400" />
               Interview Mode
             </Badge>
           ) : isChecking ? (
-            <Badge variant="outline" className="gap-1.5">
+            <Badge variant="outline" className="gap-1.5 text-amber-400 w-full md:w-auto justify-center">
               <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
               Checking...
             </Badge>
           ) : errorCount > 0 ? (
-            <Badge variant="destructive" className="gap-1.5">
+            <Badge variant="destructive" className="gap-1.5 text-red-400 w-full md:w-auto justify-center">
               <span className="size-1.5 rounded-full bg-red-400" />
               {errorCount} {errorCount === 1 ? "issue" : "issues"}
             </Badge>
           ) : hasText ? (
-            <Badge 
-              variant="secondary" 
-              className="gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0"
-            >
+            <Badge variant="secondary" className="gap-1.5 text-emerald-400 w-full md:w-auto justify-center">
               <span className="size-1.5 rounded-full bg-emerald-400" />
               Good
             </Badge>
           ) : null}
         </div>
 
-        {/* Separator */}
-        <div className="h-5 w-px bg-border" />
+        {/* Separator - Hidden on mobile */}
+        <div className="hidden md:block h-5 w-px bg-border" />
 
         {/* Action Buttons - Primary Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 w-full md:w-auto">
           {canUndo && onUndo && (
             <Button
               onClick={onUndo}
               variant="outline"
               size="sm"
-              className="gap-2"
+              className="gap-2 flex-1 md:flex-none"
               title="Undo paraphrase"
               aria-label="Undo paraphrase"
             >
@@ -101,33 +96,31 @@ export const Toolbar = ({
             </Button>
           )}
 
-          {onJobMode && (
+          {onStartInterview && (
             <Button
-              onClick={onJobMode}
-              variant={isJobMode ? "default" : "outline"}
+              onClick={onStartInterview}
+              variant="outline"
               size="sm"
-              className="gap-2"
-              title={isJobMode ? "Exit Interview Mode" : "Enter Interview Mode"}
-              aria-label={isJobMode ? "Exit Interview Mode" : "Enter Interview Mode"}
+              className="gap-2 flex-1 md:flex-none"
+              title="Start interview practice"
+              aria-label="Start interview practice"
             >
               <Briefcase className="size-4" />
-              <span className="hidden lg:inline">
-                {isJobMode ? "Exit" : "Interview"}
-              </span>
+              <span className="hidden lg:inline">Interview</span>
             </Button>
           )}
         </div>
 
-        {/* Separator */}
-        <div className="h-5 w-px bg-border" />
+        {/* Separator - Hidden on mobile */}
+        <div className="hidden md:block h-5 w-px bg-border" />
 
         {/* Action Buttons - Secondary Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 w-full md:w-auto">
           <Button
             onClick={handleCopy}
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-1 md:flex-none"
             disabled={!hasText}
             title={copied ? "Copied!" : "Copy to clipboard"}
             aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
@@ -146,7 +139,7 @@ export const Toolbar = ({
             onClick={onClear}
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-1 md:flex-none"
             disabled={!hasText}
             title="Clear editor"
             aria-label="Clear editor"
@@ -159,7 +152,9 @@ export const Toolbar = ({
             <ToolsMenu
               onParaphrase={onParaphrase}
               onAiDetect={onAiDetect}
+              onStopInterview={onStopInterview}
               hasText={hasText}
+              isInterviewMode={isJobMode}
             />
           )}
         </div>

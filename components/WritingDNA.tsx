@@ -70,17 +70,19 @@ const MetricCard = ({
     emerald: "text-emerald-500",
     amber: "text-amber-500",
     red: "text-red-500",
-    accent: "text-accent",
+    accent: "text-accent-foreground",
   };
 
   return (
-    <div 
+    <div
       className="flex items-center justify-between p-3 rounded-lg border border-border bg-background/50 hover:bg-accent/5 transition-colors"
       title={tooltip}
     >
       <div className="flex items-center gap-2">
         <span className={`${colorClasses[color]}`}>{icon}</span>
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          {label}
+        </span>
       </div>
       <div className="text-right">
         <p className="text-sm font-semibold text-foreground">
@@ -164,7 +166,6 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
 
       {/* Content */}
       <CardContent className="space-y-6">
-        
         {/* Personality Section */}
         <Card className="border-l-4 border-l-accent/50 bg-accent/30 border-border">
           <CardContent className="pt-4 space-y-2">
@@ -177,14 +178,13 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
                   {dna.personality.description}
                 </p>
               </div>
-              <Brain className="size-4 text-accent flex-shrink-0 mt-0.5" />
+              <Brain className="size-4 text-accent-foreground shrink-0 mt-0.5" />
             </div>
           </CardContent>
         </Card>
 
         {/* Metrics Section */}
         <div className="space-y-3">
-          
           {/* Vocabulary Richness */}
           <MetricCard
             icon={<MessageCircle className="size-4" />}
@@ -198,7 +198,7 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
 
           {/* Sentence Length */}
           <MetricCard
-            icon={<TrendingUp className="size-4" />}
+            icon={<TrendingUp className="size-4 " />}
             label="Avg Sentence Length"
             value={dna.avgSentenceLength}
             suffix=" words"
@@ -222,10 +222,13 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-background/50">
             <div className="flex items-center gap-2">
               <BookOpen className="size-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground">Reading Level</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                Reading Level
+              </span>
             </div>
             <Badge variant="outline" className="text-xs">
-              {gradeToCEFR(dna.gradeLevel).level} — {gradeToCEFR(dna.gradeLevel).label}
+              {gradeToCEFR(dna.gradeLevel).level} —{" "}
+              {gradeToCEFR(dna.gradeLevel).label}
             </Badge>
           </div>
         </div>

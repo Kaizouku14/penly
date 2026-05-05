@@ -20,6 +20,7 @@ import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { Toolbar } from "@/components/Toolbar";
 import { ParaphraseDialog } from "@/components/ParaphraseDialog";
 import { AIDetectDialog } from "@/components/AIDetectDialog";
+import { InterviewUploadDialog } from "@/components/InterviewUploadDialog";
 import { JobModePanel } from "@/components/JobModePanelEnhanced";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { parseInterviewQuestions } from "@/lib/utils/parseQuestions";
@@ -38,6 +39,9 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const [isParaphraseDialogOpen, setIsParaphraseDialogOpen] =
     React.useState(false);
   const [isAiDetectDialogOpen, setIsAiDetectDialogOpen] = React.useState(false);
+  const [isInterviewUploadDialogOpen, setIsInterviewUploadDialogOpen] =
+    React.useState(false);
+  const [isUploadingResume, setIsUploadingResume] = React.useState(false);
   const [bookmarkedQuestions, setBookmarkedQuestions] = React.useState<
     Set<string>
   >(new Set());
@@ -45,7 +49,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = React.useRef<HTMLDivElement>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { result, isChecking } = useGrammarCheck(text);
   const { tone, isAnalyzing } = useToneAnalysis(text);
@@ -84,7 +87,7 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     currentQuestion && isInterviewMode
       ? getQuestionHistory(currentQuestion.id)
       : null;
-  const wordCount = text.trim().split(/\s+/).length;
+  const wordCount = text ? text.trim().split(/\s+/).length : 0;
 
   // Sync scroll position between textarea and highlight layer
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
@@ -145,33 +148,40 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     await fetchAiDetect();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = async (file: File) => {
+    setIsUploadingResume(true);
 
-    if (!file) return;
+    try {
+      setResumeFileName(file.name);
 
-    setResumeFileName(file.name);
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const formData = new FormData();
-    formData.append("file", file);
+      const response = await fetch("/api/resume", {
+        method: "POST",
+        body: formData,
+      });
 
-    const response = await fetch("/api/resume", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-    const parsedQuestions = parseInterviewQuestions(data.questions);
-    enableInterviewMode(parsedQuestions);
-    setText("");
+      const data = await response.json();
+      const parsedQuestions = parseInterviewQuestions(data.questions);
+      enableInterviewMode(parsedQuestions);
+      setText("");
+      setIsInterviewUploadDialogOpen(false);
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+    } finally {
+      setIsUploadingResume(false);
+    }
   };
 
-  const handleToggleJobMode = () => {
-    if (isInterviewMode) {
-      disableInterviewMode();
-      setText("");
-      setResumeFileName("");
-    }
+  const handleStartInterview = () => {
+    setIsInterviewUploadDialogOpen(true);
+  };
+
+  const handleStopInterview = () => {
+    disableInterviewMode();
+    setText("");
+    setResumeFileName("");
   };
 
   const handleEvaluateAnswer = async () => {
@@ -231,7 +241,8 @@ export const Editor = ({ onTextChange }: EditorProps) => {
             onClear={handleClear}
             onParaphrase={!isInterviewMode ? handleParaphrase : undefined}
             onAiDetect={!isInterviewMode ? handleAiDetect : undefined}
-            onJobMode={handleToggleJobMode}
+            onStartInterview={!isInterviewMode ? handleStartInterview : undefined}
+            onStopInterview={isInterviewMode ? handleStopInterview : undefined}
             onUndo={paraphraseHistory ? handleUndoParaphrase : undefined}
             canUndo={paraphraseHistory !== null}
             isChecking={isChecking}
@@ -272,36 +283,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           />
         </CardContent>
 
-        {/* Resume Upload Section (Interview Mode) */}
-        {isInterviewMode && (
-          <div className="border-t border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className="hidden"
-                aria-label="Upload resume"
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <Upload className="size-4" />
-                Upload Resume
-              </Button>
-              {resumeFileName && (
-                <span className="text-xs text-muted-foreground">
-                  {resumeFileName}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Footer - Stats */}
         <CardFooter className="border-t border-border px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex gap-4">
@@ -309,11 +290,12 @@ export const Editor = ({ onTextChange }: EditorProps) => {
               Words: <strong className="text-foreground">{wordCount}</strong>
             </span>
             <span>
-              Characters: <strong className="text-foreground">{text.length}</strong>
+              Characters:{" "}
+              <strong className="text-foreground">{text.length}</strong>
             </span>
           </div>
           {text.length > 0 && (
-            <span className="text-xs text-accent">
+            <span className="text-xs text-accent-foreground">
               Reading time: ~{Math.ceil(wordCount / 200)} min
             </span>
           )}
@@ -388,6 +370,13 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         confidence={confidence}
         analysis={analysis}
         onClose={() => setIsAiDetectDialogOpen(false)}
+      />
+
+      <InterviewUploadDialog
+        isOpen={isInterviewUploadDialogOpen}
+        onClose={() => setIsInterviewUploadDialogOpen(false)}
+        onFileSelect={handleFileChange}
+        isLoading={isUploadingResume}
       />
     </div>
   );

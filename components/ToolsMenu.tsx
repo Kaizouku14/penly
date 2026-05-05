@@ -7,19 +7,24 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Wand2, Search } from "lucide-react";
+import { MoreVertical, Wand2, Search, LogOut } from "lucide-react";
 
 interface ToolsMenuProps {
   onParaphrase: () => void;
   onAiDetect: () => void;
+  onStopInterview?: () => void;
   hasText: boolean;
+  isInterviewMode?: boolean;
 }
 
 export const ToolsMenu = ({
   onParaphrase,
   onAiDetect,
+  onStopInterview,
   hasText,
+  isInterviewMode = false,
 }: ToolsMenuProps) => {
   return (
     <DropdownMenu>
@@ -28,21 +33,46 @@ export const ToolsMenu = ({
           variant="outline"
           size="sm"
           className="flex items-center gap-2"
-          disabled={!hasText}
+          disabled={!hasText && !isInterviewMode}
           title="More tools"
         >
           <MoreVertical className="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onParaphrase} className="flex items-center gap-2">
-          <Wand2 className="size-4" />
-          <span>Paraphrase</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onAiDetect} className="flex items-center gap-2">
-          <Search className="size-4" />
-          <span>Check AI Content</span>
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="w-48">
+        {!isInterviewMode && (
+          <>
+            <DropdownMenuItem
+              onClick={onParaphrase}
+              className="flex items-center gap-2"
+            >
+              <Wand2 className="size-4" />
+              <span>Paraphrase</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={onAiDetect}
+              className="flex items-center gap-2"
+            >
+              <Search className="size-4" />
+              <span>Check AI Content</span>
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {isInterviewMode && onStopInterview && (
+          <>
+            {!isInterviewMode && (
+              <DropdownMenuSeparator />
+            )}
+            <DropdownMenuItem
+              onClick={onStopInterview}
+              className="flex items-center gap-2 text-destructive focus:text-destructive"
+            >
+              <LogOut className="size-4" />
+              <span>Exit Interview</span>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
