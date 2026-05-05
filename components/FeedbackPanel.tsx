@@ -11,13 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFeedback } from "@/hooks/useFeedback";
 import { AlertCircle, ChevronRight, X } from "lucide-react";
 import {
   getCategoryFromIssueType,
   getCategoryLabel,
-  getCategoryBgClass,
 } from "@/components/editor/helper";
 
 interface FeedbackPanelProps {

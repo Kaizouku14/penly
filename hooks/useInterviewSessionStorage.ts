@@ -28,24 +28,26 @@ const SESSION_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 /**
  * Validates and sanitizes interview session data
  */
-function validateSessionData(data: any): data is InterviewSessionData {
+function validateSessionData(data: unknown): data is InterviewSessionData {
   if (!data || typeof data !== "object") return false;
-  if (!Array.isArray(data.resumeQuestions)) return false;
-  if (typeof data.currentQuestionIndex !== "number") return false;
-  if (!Array.isArray(data.answers)) return false;
-  if (typeof data.sessionStartTime !== "number") return false;
-  if (typeof data.lastUpdated !== "number") return false;
+  const obj = data as Record<string, unknown>;
+  if (!Array.isArray(obj.resumeQuestions)) return false;
+  if (typeof obj.currentQuestionIndex !== "number") return false;
+  if (!Array.isArray(obj.answers)) return false;
+  if (typeof obj.sessionStartTime !== "number") return false;
+  if (typeof obj.lastUpdated !== "number") return false;
 
   // Validate answers structure
-  return data.answers.every((answer: any) => {
-    if (!answer.questionId || typeof answer.text !== "string") return false;
-    if (typeof answer.timestamp !== "number") return false;
-    if (typeof answer.wordCount !== "number") return false;
+  return obj.answers.every((answer: unknown) => {
+    const ans = answer as Record<string, unknown>;
+    if (!ans.questionId || typeof ans.text !== "string") return false;
+    if (typeof ans.timestamp !== "number") return false;
+    if (typeof ans.wordCount !== "number") return false;
     if (
-      answer.audioData &&
-      (!Array.isArray(answer.audioData.waveform) ||
-        typeof answer.audioData.duration !== "number" ||
-        typeof answer.audioData.base64 !== "string")
+      ans.audioData &&
+      (!Array.isArray((ans.audioData as Record<string, unknown>).waveform) ||
+        typeof (ans.audioData as Record<string, unknown>).duration !== "number" ||
+        typeof (ans.audioData as Record<string, unknown>).base64 !== "string")
     ) {
       return false;
     }
@@ -70,40 +72,42 @@ export const useInterviewSessionStorage = () => {
 
   // Load session from localStorage on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        
-        // Validate data structure
-        if (!validateSessionData(parsed)) {
-          console.warn("Invalid session data structure, clearing storage");
-          localStorage.removeItem(SESSION_STORAGE_KEY);
-          setSessionData(null);
-          setIsLoaded(true);
-          return;
-        }
+    const loadSession = async () => {
+      try {
+        const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as unknown;
+          
+          // Validate data structure
+          if (!validateSessionData(parsed)) {
+            console.warn("Invalid session data structure, clearing storage");
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            setIsLoaded(true);
+            return;
+          }
 
-        // Check expiration
-        if (isSessionExpired(parsed.lastUpdated)) {
-          console.warn("Session expired, clearing storage");
-          localStorage.removeItem(SESSION_STORAGE_KEY);
-          setSessionData(null);
-          setIsLoaded(true);
-          return;
-        }
+          // Check expiration
+          if (isSessionExpired(parsed.lastUpdated)) {
+            console.warn("Session expired, clearing storage");
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            setIsLoaded(true);
+            return;
+          }
 
-        setSessionData(parsed);
+          setSessionData(parsed);
+        }
+        setIsLoaded(true);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load session";
+        console.error("Session loading error:", errorMessage);
+        setError(new Error(errorMessage));
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        setIsLoaded(true);
       }
-      setIsLoaded(true);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load session";
-      console.error("Session loading error:", errorMessage);
-      setError(new Error(errorMessage));
-      localStorage.removeItem(SESSION_STORAGE_KEY);
-      setIsLoaded(true);
-    }
+    };
+
+    loadSession();
   }, []);
 
   /**
@@ -149,7 +153,7 @@ export const useInterviewSessionStorage = () => {
             a.timestamp === answer.timestamp
         );
 
-        let updatedAnswers = [...sessionData.answers];
+        const updatedAnswers = [...sessionData.answers];
         if (existingIndex >= 0) {
           updatedAnswers[existingIndex] = answer;
         } else {
@@ -236,7 +240,7 @@ export const useInterviewSessionStorage = () => {
    * Toggle bookmark status for a question
    */
   const toggleBookmark = useCallback(
-    (questionId: string) => {
+    () => {
       // Bookmark functionality removed
       console.warn("Bookmark functionality has been removed");
     },

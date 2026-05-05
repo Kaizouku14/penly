@@ -13,10 +13,6 @@ interface InterviewEvaluationResponse {
   error?: string;
 }
 
-const DEFAULT_RESPONSE: InterviewEvaluationResponse = {
-  critique: null,
-};
-
 export const POST = async (
   req: NextRequest,
 ): Promise<NextResponse<InterviewEvaluationResponse>> => {
