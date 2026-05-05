@@ -1,7 +1,3 @@
-/**
- * Hook for managing interview mode state
- */
-
 import { useState, useCallback } from "react";
 import { InterviewQuestion } from "@/types/interview";
 

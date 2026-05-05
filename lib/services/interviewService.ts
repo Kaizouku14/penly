@@ -1,8 +1,3 @@
-/**
- * Interview critique service using Groq API
- * Evaluates candidate answers to interview questions
- */
-
 import { callGroqApi, parseJsonResponse } from "../api/groqClient";
 import { InterviewCritique } from "@/types/interview";
 

@@ -1,9 +1,4 @@
 /**
- * Client-side text analysis utilities for the Writing DNA feature.
- * No API calls - all calculations are performed in the browser.
- */
-
-/**
  * Calculate the number of syllables in a word (simplified but effective).
  */
 export function syllableCount(word: string): number {
@@ -68,27 +63,18 @@ export function getSentenceClarity(sentence: string): number {
   );
 }
 
-/**
- * Get the Tailwind color class for a clarity score.
- */
 export function getClarityColor(score: number): "emerald" | "amber" | "red" {
   if (score >= 80) return "emerald";
   if (score >= 60) return "amber";
   return "red";
 }
 
-/**
- * Get the readable label for a clarity score.
- */
 export function getClarityLabel(score: number): string {
   if (score >= 80) return "Clear";
   if (score >= 60) return "Moderate";
   return "Complex";
 }
 
-/**
- * Calculate writing personality based on style metrics.
- */
 export function getWritingPersonality(
   richness: number,
   avgLen: number,
@@ -131,9 +117,6 @@ export function getWritingPersonality(
   };
 }
 
-/**
- * Get the grade level label for a Flesch-Kincaid score.
- */
 export function getGradeLabel(grade: number): string {
   if (grade <= 6) return "Elementary";
   if (grade <= 9) return "Middle school";

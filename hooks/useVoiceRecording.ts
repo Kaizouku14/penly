@@ -1,7 +1,3 @@
-/**
- * Hook for managing voice recording with audio visualization
- */
-
 import { useState, useRef, useCallback, useEffect } from "react";
 
 export interface AudioData {

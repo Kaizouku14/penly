@@ -1,7 +1,3 @@
-/**
- * Grammar checking service using LanguageTool API
- */
-
 export interface GrammarMatch {
   rule: { id: string };
   // Additional fields from LanguageTool

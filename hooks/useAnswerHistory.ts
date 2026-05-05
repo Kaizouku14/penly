@@ -1,7 +1,3 @@
-/**
- * Hook for managing answer history and retakes
- */
-
 import { useState, useCallback } from "react";
 import { InterviewCritique } from "@/types/interview";
 

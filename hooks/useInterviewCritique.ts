@@ -1,7 +1,3 @@
-/**
- * Hook for fetching interview answer critique
- */
-
 import { useState, useCallback } from "react";
 import { InterviewCritique } from "@/types/interview";
 import { evaluateInterviewAnswer } from "@/lib/services/interviewService";

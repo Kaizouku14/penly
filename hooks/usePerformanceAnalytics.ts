@@ -1,7 +1,3 @@
-/**
- * Hook for tracking performance trends and analytics
- */
-
 import { useState, useCallback, useMemo } from "react";
 
 export interface PerformanceMetric {

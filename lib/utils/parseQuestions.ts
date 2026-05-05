@@ -1,7 +1,3 @@
-/**
- * Utility to parse interview questions from API response
- */
-
 import { InterviewQuestion } from "@/types/interview";
 
 /**

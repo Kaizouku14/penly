@@ -1,8 +1,3 @@
-/**
- * Groq API client utility for making LLM requests
- * Centralizes API configuration and common request patterns
- */
-
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_MODEL = "llama-3.3-70b-versatile";
 

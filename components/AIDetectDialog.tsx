@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -77,7 +76,6 @@ export const AIDetectDialog = ({
                 )}
               </div>
 
-              {/* Confidence Score */}
               {confidence !== null && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -97,7 +95,6 @@ export const AIDetectDialog = ({
                 </div>
               )}
 
-              {/* Analysis */}
               {analysis && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">

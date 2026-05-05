@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -55,7 +54,6 @@ export const AnswerInput = ({
 
   return (
     <div className="space-y-3">
-      {/* Word Count */}
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">
           Words typed in your answer
@@ -65,11 +63,9 @@ export const AnswerInput = ({
         </span>
       </div>
 
-      {/* Voice Recording Section */}
       {recordedAudio ? (
         <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
           <div className="space-y-3">
-            {/* Recording Duration */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Volume2 className="size-4 text-blue-600 dark:text-blue-400" />
@@ -82,7 +78,6 @@ export const AnswerInput = ({
               </span>
             </div>
 
-            {/* Waveform Visualization */}
             <div className="flex items-center gap-1 h-12 bg-background rounded-md p-2 overflow-hidden">
               {waveformData.length > 0 ? (
                 waveformData.map((value, idx) => (
@@ -101,7 +96,6 @@ export const AnswerInput = ({
               )}
             </div>
 
-            {/* Playback Controls */}
             <div className="flex items-center gap-2">
               <Button
                 onClick={onPlayback}

@@ -1,7 +1,3 @@
-/**
- * LLM-based writing services using Groq API
- */
-
 import { callGroqApi, parseJsonResponse } from "../api/groqClient";
 
 // System prompts
