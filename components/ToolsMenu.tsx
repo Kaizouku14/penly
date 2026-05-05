@@ -71,7 +71,7 @@ export const ToolsMenu = ({
               className="flex items-center gap-2"
             >
            <Briefcase className="size-4" />
-              <span className="hidden lg:inline">Interview</span>
+              <span>Interview</span>
             </DropdownMenuItem>
         )}
       </DropdownMenuContent>

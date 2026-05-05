@@ -49,8 +49,8 @@ export const Toolbar = ({
         {isJobMode ? "Job Interview Mode" : "Grammar Checker"}
       </h2>
 
-      <div className="flex flex-col gap-3 w-full md:w-auto md:flex-row md:items-center md:gap-3">
-        <div className="shrink-0">
+      <div className="flex gap-3 w-full md:w-auto flex-row md:items-center md:gap-3">
+        <div className="shrink-0 md:mb-2">
           {isJobMode ? (
             <Badge
               variant="secondary"

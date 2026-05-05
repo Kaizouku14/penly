@@ -46,12 +46,6 @@ export async function callGroqApi(
     max_tokens: config?.max_tokens || 300,
   };
 
-  console.log("📡 Calling Groq API with payload:", {
-    model: payload.model,
-    max_tokens: payload.max_tokens,
-    messageCount: messages.length,
-  });
-
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
@@ -62,19 +56,12 @@ export async function callGroqApi(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("🔴 Groq API error:", {
-      status: response.status,
-      statusText: response.statusText,
-      errorBody: errorText,
-    });
     throw new Error(`Groq API returned ${response.status}: ${response.statusText}`);
   }
 
   const data = (await response.json()) as GroqResponse;
   const content = data.choices?.[0]?.message?.content;
 
-  console.log("✅ Groq API response received, content length:", content?.length);
 
   if (!content) {
     throw new Error("No content in Groq API response");
@@ -90,16 +77,9 @@ export async function callGroqApi(
  */
 export function parseJsonResponse<T>(content: string): T {
   try {
-    console.log("📋 Parsing JSON response, content preview:", content.substring(0, 200));
     const parsed = JSON.parse(content) as T;
-    console.log("✅ JSON parsed successfully");
     return parsed;
-  } catch (error) {
-    console.error("🔴 Failed to parse JSON response:", {
-      error,
-      contentPreview: content.substring(0, 500),
-      contentLength: content.length,
-    });
+  } catch{
     throw new Error(`Invalid JSON in API response: ${content.substring(0, 100)}`);
   }
 }
