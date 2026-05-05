@@ -55,7 +55,7 @@ export const FeedbackPanel = ({
     ? getCategoryFromIssueType(selectedMatch.rule.issueType)
     : null;
 
-  const { explanation, isLoading } = useFeedback(selectedMatch, errorText);
+  const { explanation, isLoading } = useFeedback(selectedMatch, errorText, text);
 
   // Filter errors by category
   const filteredErrors = React.useMemo(() => {

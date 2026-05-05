@@ -8,6 +8,7 @@ interface FeedbackRequest {
   message: string;
   ruleDescription: string;
   errorText: string;
+  sentence?: string;
 }
 
 interface FeedbackResponse {
@@ -23,15 +24,19 @@ export const POST = async (
 ): Promise<NextResponse<FeedbackResponse>> => {
   try {
     const body = (await req.json()) as unknown;
-    const { message, ruleDescription, errorText } = validateRequestBody<FeedbackRequest>(
+    const { message, ruleDescription, errorText, sentence } = validateRequestBody<FeedbackRequest>(
       body,
       ["message", "ruleDescription", "errorText"],
     );
+
+    // Use sentence context if provided, otherwise fall back to error text
+    const context = sentence || errorText;
 
     const explanation = await generateGrammarFeedback(
       message,
       ruleDescription,
       errorText,
+      context,
     );
 
     return NextResponse.json({ explanation });

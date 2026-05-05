@@ -136,13 +136,19 @@ export async function generateGrammarFeedback(
   message: string,
   ruleDescription: string,
   errorText: string,
+  context: string = errorText,
 ): Promise<string> {
   const content = await callGroqApi(
     [
       { role: "system", content: FEEDBACK_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `Explain this grammar error: "${message}" for the word/phrase "${errorText}". Rule: ${ruleDescription}`,
+        content: `Grammar error: "${message}"
+            Error/word: "${errorText}"
+            Rule: ${ruleDescription}
+            Context (full sentence): "${context}"
+
+        Please explain this error and how to fix it.`,
       },
     ],
     { max_tokens: 150 },
