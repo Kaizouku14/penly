@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "../ui/textarea";
 import { highlightText } from "./helper";
 import { ToneBar } from "@/components/ToneBar";
@@ -9,11 +11,19 @@ import { useGrammarCheck } from "@/hooks/useGrammarCheck";
 import { useToneAnalysis } from "@/hooks/useToneAnalysis";
 import { useParaphrase } from "@/hooks/useParaphrase";
 import { useAiDetect } from "@/hooks/useAiDetect";
+import { useInterviewMode } from "@/hooks/useInterviewMode";
+import { useInterviewCritique } from "@/hooks/useInterviewCritique";
+import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+import { useAnswerHistory } from "@/hooks/useAnswerHistory";
+import { usePerformanceAnalytics } from "@/hooks/usePerformanceAnalytics";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { Toolbar } from "@/components/Toolbar";
 import { ParaphraseDialog } from "@/components/ParaphraseDialog";
 import { AIDetectDialog } from "@/components/AIDetectDialog";
+import { JobModePanel } from "@/components/JobModePanelEnhanced";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { parseInterviewQuestions } from "@/lib/utils/parseQuestions";
+import { Upload } from "lucide-react";
 
 interface EditorProps {
   onTextChange?: (text: string) => void;
@@ -28,16 +38,53 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const [isParaphraseDialogOpen, setIsParaphraseDialogOpen] =
     React.useState(false);
   const [isAiDetectDialogOpen, setIsAiDetectDialogOpen] = React.useState(false);
+  const [bookmarkedQuestions, setBookmarkedQuestions] = React.useState<
+    Set<string>
+  >(new Set());
+  const [resumeFileName, setResumeFileName] = React.useState<string>("");
   const isMobile = useMediaQuery("(max-width: 768px)");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = React.useRef<HTMLDivElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { result, isChecking } = useGrammarCheck(text);
   const { tone, isAnalyzing } = useToneAnalysis(text);
   const { paraphrase, isParaphrasing, fetchParaphrase } = useParaphrase(text);
   const { isAiGenerated, confidence, analysis, isDetecting, fetchAiDetect } =
     useAiDetect(text);
+  const {
+    isInterviewMode,
+    currentQuestion,
+    currentQuestionIndex,
+    questions: interviewQuestions,
+    enableInterviewMode,
+    disableInterviewMode,
+    nextQuestion,
+    previousQuestion,
+    hasNextQuestion,
+    hasPreviousQuestion,
+  } = useInterviewMode();
+  const { critique, isCritiquing, fetchCritique } = useInterviewCritique();
+  const {
+    isRecording,
+    isPlayingBack,
+    recordedAudio,
+    waveformData,
+    startRecording,
+    stopRecording,
+    playback,
+    clearRecording,
+  } = useVoiceRecording();
+  const { saveAnswer, getQuestionHistory } = useAnswerHistory();
+  const { trend, addMetric, getImprovementRate } = usePerformanceAnalytics();
+
   const errorCount = result?.length ?? 0;
+  const improvementRate = getImprovementRate();
+  const currentQuestionHistory =
+    currentQuestion && isInterviewMode
+      ? getQuestionHistory(currentQuestion.id)
+      : null;
+  const wordCount = text.trim().split(/\s+/).length;
 
   // Sync scroll position between textarea and highlight layer
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
@@ -103,6 +150,8 @@ export const Editor = ({ onTextChange }: EditorProps) => {
 
     if (!file) return;
 
+    setResumeFileName(file.name);
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -111,79 +160,219 @@ export const Editor = ({ onTextChange }: EditorProps) => {
       body: formData,
     });
 
-    console.log(response);
+    const data = await response.json();
+    const parsedQuestions = parseInterviewQuestions(data.questions);
+    enableInterviewMode(parsedQuestions);
+    setText("");
+  };
+
+  const handleToggleJobMode = () => {
+    if (isInterviewMode) {
+      disableInterviewMode();
+      setText("");
+      setResumeFileName("");
+    }
+  };
+
+  const handleEvaluateAnswer = async () => {
+    if (currentQuestion && text.trim()) {
+      await fetchCritique(currentQuestion.text, text);
+
+      // Save answer to history
+      if (critique) {
+        saveAnswer(currentQuestion.id, text, critique, recordedAudio?.duration);
+
+        // Add to performance analytics
+        addMetric({
+          questionId: currentQuestion.id,
+          rating: critique.rating,
+          timestamp: Date.now(),
+          category: currentQuestion.category,
+          confidence: critique.confidence,
+        });
+      }
+    }
+  };
+
+  const handleNextQuestion = () => {
+    nextQuestion();
+    setText("");
+    clearRecording();
+  };
+
+  const handlePreviousQuestion = () => {
+    previousQuestion();
+    setText("");
+    clearRecording();
+  };
+
+  const handleToggleBookmark = () => {
+    if (currentQuestion) {
+      setBookmarkedQuestions((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(currentQuestion.id)) {
+          newSet.delete(currentQuestion.id);
+        } else {
+          newSet.add(currentQuestion.id);
+        }
+        return newSet;
+      });
+    }
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full">
-      {/* Toolbar */}
-      <Toolbar
-        text={text}
-        onClear={handleClear}
-        onParaphrase={handleParaphrase}
-        onAiDetect={handleAiDetect}
-        onUndo={paraphraseHistory ? handleUndoParaphrase : undefined}
-        canUndo={paraphraseHistory !== null}
-        isChecking={isChecking}
-        errorCount={errorCount}
-      />
-
-      {/* Editor container */}
-      <div className="relative w-full h-56 lg:h-80 rounded-md border border-border bg-background shadow-sm overflow-hidden">
-        {/* Grammar Highlight Layer */}
-        <div
-          ref={highlightLayerRef}
-          aria-hidden="true"
-          className="absolute inset-0 p-3 font-mono text-sm wrap-break-word overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
-        >
-          {highlightText(text, result ?? [], selectedMatch, setSelectedMatch)}
+    <div className="flex flex-col gap-4 w-full">
+      {/* Main Editor Card */}
+      <Card className="overflow-hidden">
+        {/* Toolbar Header */}
+        <div className="border-b border-border px-4 py-3">
+          <Toolbar
+            text={text}
+            onClear={handleClear}
+            onParaphrase={!isInterviewMode ? handleParaphrase : undefined}
+            onAiDetect={!isInterviewMode ? handleAiDetect : undefined}
+            onJobMode={handleToggleJobMode}
+            onUndo={paraphraseHistory ? handleUndoParaphrase : undefined}
+            canUndo={paraphraseHistory !== null}
+            isChecking={isChecking}
+            errorCount={errorCount}
+            isJobMode={isInterviewMode}
+          />
         </div>
 
-        {/* Textarea - interactive input */}
-        <Textarea
-          ref={textareaRef}
-          className="absolute inset-0 p-3 w-full h-full font-mono text-sm
-            bg-transparent text-foreground caret-foreground
-            border-none resize-none outline-none focus-visible:ring-0
-            leading-relaxed wrap-break-word"
-          value={text}
-          placeholder={
-            isMobile
-              ? "Start typing..."
-              : "Start typing or paste your text here..."
-          }
-          onChange={(e) => handleTextChange(e.target.value)}
-          onScroll={handleScroll}
-          spellCheck={false}
+        {/* Editor Area */}
+        <CardContent className="p-0 relative h-56 lg:h-80 overflow-hidden">
+          {/* Grammar Highlight Layer */}
+          <div
+            ref={highlightLayerRef}
+            aria-hidden="true"
+            className="absolute inset-0 p-3 font-mono text-sm wrap-break-word overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
+          >
+            {highlightText(text, result ?? [], selectedMatch, setSelectedMatch)}
+          </div>
+
+          {/* Textarea - interactive input */}
+          <Textarea
+            ref={textareaRef}
+            className="absolute inset-0 p-3 w-full h-full font-mono text-sm
+              bg-transparent text-foreground caret-foreground
+              border-none resize-none outline-none focus-visible:ring-0
+              leading-relaxed wrap-break-word"
+            value={text}
+            placeholder={
+              isInterviewMode
+                ? currentQuestion?.text || "Loading question..."
+                : isMobile
+                  ? "Start typing..."
+                  : "Start typing or paste your text here..."
+            }
+            onChange={(e) => handleTextChange(e.target.value)}
+            onScroll={handleScroll}
+            spellCheck={false}
+          />
+        </CardContent>
+
+        {/* Resume Upload Section (Interview Mode) */}
+        {isInterviewMode && (
+          <div className="border-t border-border px-4 py-3">
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                className="hidden"
+                aria-label="Upload resume"
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Upload className="size-4" />
+                Upload Resume
+              </Button>
+              {resumeFileName && (
+                <span className="text-xs text-muted-foreground">
+                  {resumeFileName}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Footer - Stats */}
+        <CardFooter className="border-t border-border px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex gap-4">
+            <span>
+              Words: <strong className="text-foreground">{wordCount}</strong>
+            </span>
+            <span>
+              Characters: <strong className="text-foreground">{text.length}</strong>
+            </span>
+          </div>
+          {text.length > 0 && (
+            <span className="text-xs text-accent">
+              Reading time: ~{Math.ceil(wordCount / 200)} min
+            </span>
+          )}
+        </CardFooter>
+      </Card>
+
+      {/* Feedback & Analytics Section */}
+      <div className="space-y-4">
+        {/* Tone Analysis */}
+        {text.length > 0 && (
+          <ToneBar tone={tone} isAnalyzing={isAnalyzing} text={text} />
+        )}
+
+        {/* Grammar Feedback */}
+        <FeedbackPanel
+          result={result}
+          selectedMatch={selectedMatch}
+          text={text}
+          onSelectMatch={setSelectedMatch}
+          onApplySuggestion={handleApplySuggestion}
         />
       </div>
 
-      <div>
-        <input type="file" onChange={handleFileChange} />
-      </div>
-
-      {/* Feedback Panel - always visible */}
-      <FeedbackPanel
-        result={result}
-        selectedMatch={selectedMatch}
-        text={text}
-        onSelectMatch={setSelectedMatch}
-        onApplySuggestion={handleApplySuggestion}
-      />
-
-      {/* Tone Bar */}
-      {text.trim().length > 0 && (
-        <ToneBar tone={tone} isAnalyzing={isAnalyzing} text={text} />
+      {/* Job Mode Panel */}
+      {isInterviewMode && currentQuestion && (
+        <JobModePanel
+          currentQuestion={currentQuestion}
+          currentIndex={currentQuestionIndex}
+          totalQuestions={interviewQuestions.length}
+          critique={critique}
+          isCritiquing={isCritiquing}
+          onNext={handleNextQuestion}
+          onPrevious={handlePreviousQuestion}
+          onEvaluate={handleEvaluateAnswer}
+          onClose={() => disableInterviewMode()}
+          hasNextQuestion={hasNextQuestion}
+          hasPreviousQuestion={hasPreviousQuestion}
+          isRecording={isRecording}
+          isPlayingBack={isPlayingBack}
+          recordedAudio={recordedAudio}
+          waveformData={waveformData}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onPlayback={playback}
+          onClearRecording={clearRecording}
+          answerText={text}
+          performanceTrend={trend}
+          improvementRate={improvementRate}
+          questionHistory={currentQuestionHistory}
+          isBookmarked={
+            currentQuestion
+              ? bookmarkedQuestions.has(currentQuestion.id)
+              : false
+          }
+          onBookmark={handleToggleBookmark}
+        />
       )}
 
-      {/* Word count */}
-      {text.trim().length > 0 && (
-        <p className="text-xs text-muted-foreground text-right">
-          {text.trim().split(/\s+/).length} words · {text.length} characters
-        </p>
-      )}
-
-      {/* Paraphrase Dialog */}
+      {/* Dialogs */}
       <ParaphraseDialog
         isOpen={isParaphraseDialogOpen}
         isLoading={isParaphrasing}
@@ -192,7 +381,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         onApply={handleApplyParaphrase}
       />
 
-      {/* AI Detect Dialog */}
       <AIDetectDialog
         isOpen={isAiDetectDialogOpen}
         isLoading={isDetecting}

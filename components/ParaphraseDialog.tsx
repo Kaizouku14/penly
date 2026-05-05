@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface ParaphraseDialogProps {
   isOpen: boolean;
@@ -46,9 +47,11 @@ export const ParaphraseDialog = ({
               <p className="text-xs text-muted-foreground mb-2">
                 Paraphrased text:
               </p>
-              <p className="text-xs bg-muted p-3 rounded border border-border text-foreground leading-relaxed">
-                {paraphrase}
-              </p>
+              <ScrollArea className="h-54">
+                <p className="text-xs p-3 bg-muted rounded border border-border text-foreground leading-relaxed">
+                  {paraphrase}
+                </p>
+              </ScrollArea>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground text-center py-4">

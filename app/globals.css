@@ -84,10 +84,90 @@
     * {
         @apply border-border outline-ring/50;
     }
+    
     body {
         @apply bg-background text-foreground;
     }
+    
     html {
         @apply font-sans;
+    }
+
+    /* Enhanced focus states for better keyboard navigation */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+        @apply outline-2 outline-offset-2 outline-ring;
+    }
+
+    /* Better disabled state contrast */
+    button:disabled,
+    input:disabled,
+    textarea:disabled,
+    select:disabled {
+        @apply opacity-50 cursor-not-allowed;
+    }
+
+    /* Improve text selection contrast */
+    ::selection {
+        @apply bg-accent/50 text-foreground;
+    }
+
+    /* Better focus visible on keyboard navigation */
+    *:focus-visible {
+        @apply outline-offset-2;
+    }
+
+    /* Improved link focus */
+    a:focus-visible {
+        @apply rounded;
+    }
+
+    /* Smooth transitions for interactive elements */
+    button,
+    a,
+    input,
+    textarea,
+    select {
+        @apply transition-colors duration-200;
+    }
+}
+
+@layer components {
+    /* Consistent spacing utilities */
+    .gap-xs {
+        @apply gap-1;
+    }
+    .gap-sm {
+        @apply gap-2;
+    }
+    .gap-md {
+        @apply gap-3;
+    }
+    .gap-lg {
+        @apply gap-4;
+    }
+    .gap-xl {
+        @apply gap-6;
+    }
+    .gap-2xl {
+        @apply gap-8;
+    }
+
+    /* Better loading state patterns */
+    .animate-pulse-subtle {
+        @apply animate-pulse opacity-70;
+    }
+
+    /* Consistent card styling */
+    .card-section {
+        @apply rounded-lg border border-border bg-background/50 p-3;
+    }
+
+    /* Better hover states */
+    .interactive-hover {
+        @apply hover:bg-accent/5 transition-colors;
     }
 }

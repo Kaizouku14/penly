@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Editor } from "@/components/editor/editor";
 import { WritingDNA } from "@/components/WritingDNA";
 import { WritingDNABottomSheet } from "@/components/WritingDNABottomSheet";
@@ -9,20 +10,36 @@ export default function Home() {
   const [text, setText] = React.useState("");
 
   return (
-    <div className="min-h-screen flex flex-col py-6 px-4 md:px-6 lg:px-8 bg-background">
-      <header className="flex items-center justify-center mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Penly</h1>
-      </header>
-      <main className="flex flex-1 justify-center items-start gap-6 max-w-6xl mx-auto w-full">
-        <div className="flex-1 w-full lg:w-auto">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header Section */}
+      <Card className="border-b border-t-0 border-l-0 border-r-0 rounded-none">
+        <CardHeader className="py-6 px-4 md:px-6 lg:px-8">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-2xl">✦</span>
+            <CardTitle className="text-2xl md:text-3xl font-heading">
+              Penly
+            </CardTitle>
+          </div>
+          <CardDescription className="text-sm">
+            Grammar checker & writing analysis for professionals
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* Main Content */}
+      <main className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto py-6 px-4 md:px-6 lg:px-8 h-full flex-1 w-full">
+        {/* Primary Column */}
+        <div className="flex-1 lg:min-w-0">
           <Editor onTextChange={setText} />
         </div>
-        <div className="hidden lg:block sticky top-6 w-80">
+
+        {/* Secondary Column - Writing DNA Sidebar */}
+        <aside className="hidden lg:flex lg:flex-col w-80 gap-4 flex-shrink-0">
           <WritingDNA text={text} />
-        </div>
+        </aside>
       </main>
 
-      {/* Mobile-only */}
+      {/* Mobile Analytics Bottom Sheet */}
       <WritingDNABottomSheet text={text} />
     </div>
   );

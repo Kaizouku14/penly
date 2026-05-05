@@ -1,8 +1,12 @@
 "use client";
 
 import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useWritingDNA } from "@/hooks/useWritingDNA";
 import { gradeToCEFR } from "@/lib/utils";
+import { Zap, MessageCircle, TrendingUp, BookOpen, Brain } from "lucide-react";
 
 interface WritingDNAProps {
   text: string;
@@ -45,33 +49,44 @@ const AnimatedNumber = ({ value, suffix = "" }: AnimatedNumberProps) => {
   );
 };
 
-const MetricBar = ({
-  value,
-  max = 100,
+const MetricCard = ({
+  icon,
   label,
+  value,
+  suffix,
+  description,
   color,
+  tooltip,
 }: {
-  value: number;
-  max?: number;
+  icon: React.ReactNode;
   label: string;
-  color: "emerald" | "amber" | "red";
+  value: number;
+  suffix: string;
+  description: string;
+  color: "emerald" | "amber" | "red" | "accent";
+  tooltip?: string;
 }) => {
-  const colorMap = {
-    emerald: "bg-emerald-400",
-    amber: "bg-amber-400",
-    red: "bg-red-400",
+  const colorClasses = {
+    emerald: "text-emerald-500",
+    amber: "text-amber-500",
+    red: "text-red-500",
+    accent: "text-accent",
   };
 
-  const percentage = (value / max) * 100;
-
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="h-1 rounded-full bg-muted overflow-hidden">
-        <div
-          className={`h-full ${colorMap[color]} transition-all duration-500`}
-          style={{ width: `${percentage}%` }}
-        />
+    <div 
+      className="flex items-center justify-between p-3 rounded-lg border border-border bg-background/50 hover:bg-accent/5 transition-colors"
+      title={tooltip}
+    >
+      <div className="flex items-center gap-2">
+        <span className={`${colorClasses[color]}`}>{icon}</span>
+        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      </div>
+      <div className="text-right">
+        <p className="text-sm font-semibold text-foreground">
+          <AnimatedNumber value={value} suffix={suffix} />
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
     </div>
   );
@@ -82,23 +97,24 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
 
   if (!dna.isReady) {
     return (
-      <div className="w-full md:w-72 flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-4 h-fit">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-muted-foreground">
-            ✦ Writing DNA
-          </span>
-        </div>
-        <div className="flex flex-col gap-3">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Zap className="size-4" />
+            Writing DNA
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">
             Write at least 30 words to unlock your writing analysis.
           </p>
           <div className="space-y-2">
-            <div className="h-2 rounded-full bg-muted/50 w-full" />
-            <div className="h-2 rounded-full bg-muted/50 w-3/4" />
-            <div className="h-2 rounded-full bg-muted/50 w-5/6" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-5/6" />
+            <Skeleton className="h-3 w-4/5" />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -136,107 +152,84 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
     return "Heavy passive";
   };
 
-  const personalityColor =
-    dna.personality.label === "Sharp Communicator"
-      ? "border-emerald-400"
-      : dna.personality.label === "Conversational"
-        ? "border-amber-400"
-        : "border-amber-400";
-
   return (
-    <div className="w-full md:w-72 flex flex-col gap-4 rounded-lg border border-border bg-background p-4 h-fit">
+    <Card className="space-y-0">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-muted-foreground">
-          ✦ Writing DNA
-        </span>
-      </div>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Zap className="size-4" />
+          Writing DNA
+        </CardTitle>
+      </CardHeader>
 
-      {/* Personality Badge */}
-      <div
-        className={`border-l-4 ${personalityColor} pl-3 py-2 transition-all`}
-      >
-        <p className="text-lg font-semibold text-foreground">
-          {dna.personality.label}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {dna.personality.description}
-        </p>
-      </div>
+      {/* Content */}
+      <CardContent className="space-y-6">
+        
+        {/* Personality Section */}
+        <Card className="border-l-4 border-l-accent/50 bg-accent/30 border-border">
+          <CardContent className="pt-4 space-y-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {dna.personality.label}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {dna.personality.description}
+                </p>
+              </div>
+              <Brain className="size-4 text-accent flex-shrink-0 mt-0.5" />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Metrics */}
-      <div className="space-y-4">
-        {/* Vocabulary Richness */}
-        <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">
-              Vocabulary richness
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              <AnimatedNumber value={dna.vocabularyRichness} suffix="%" /> —{" "}
-              <span className="text-xs">
-                {getVocabularyLabel(dna.vocabularyRichness)}
-              </span>
-            </span>
-          </div>
-          <MetricBar
+        {/* Metrics Section */}
+        <div className="space-y-3">
+          
+          {/* Vocabulary Richness */}
+          <MetricCard
+            icon={<MessageCircle className="size-4" />}
+            label="Vocabulary Richness"
             value={dna.vocabularyRichness}
-            label=""
+            suffix="%"
+            description={getVocabularyLabel(dna.vocabularyRichness)}
             color={getVocabularyColor(dna.vocabularyRichness)}
+            tooltip="Measure of diverse word usage. Higher is better."
           />
-        </div>
 
-        {/* Average Sentence Length */}
-        <div>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              Avg sentence length
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              <AnimatedNumber value={dna.avgSentenceLength} /> words —{" "}
-              <span className="text-xs">
-                {getSentenceLengthLabel(dna.avgSentenceLength)}
-              </span>
-            </span>
-          </div>
-        </div>
+          {/* Sentence Length */}
+          <MetricCard
+            icon={<TrendingUp className="size-4" />}
+            label="Avg Sentence Length"
+            value={dna.avgSentenceLength}
+            suffix=" words"
+            description={getSentenceLengthLabel(dna.avgSentenceLength)}
+            color="accent"
+            tooltip="Well-balanced length is 15-25 words per sentence."
+          />
 
-        {/* Passive Voice */}
-        <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">
-              Passive voice
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              <AnimatedNumber value={dna.passivePercent} suffix="%" /> —{" "}
-              <span className="text-xs">
-                {getPassiveVoiceLabel(dna.passivePercent)}
-              </span>
-            </span>
-          </div>
-          <MetricBar
+          {/* Passive Voice */}
+          <MetricCard
+            icon={<BookOpen className="size-4" />}
+            label="Passive Voice Usage"
             value={dna.passivePercent}
-            max={50}
-            label=""
+            suffix="%"
+            description={getPassiveVoiceLabel(dna.passivePercent)}
             color={getPassiveVoiceColor(dna.passivePercent)}
+            tooltip="Lower is better for active, engaging writing."
           />
-        </div>
 
-        {/* Reading Grade Level */}
-        <div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Reading level
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              {gradeToCEFR(dna.gradeLevel).level} —{" "}
-              <span className="text-xs">
-                {gradeToCEFR(dna.gradeLevel).label}
-              </span>
-            </span>
+          {/* Reading Level */}
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-background/50">
+            <div className="flex items-center gap-2">
+              <BookOpen className="size-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">Reading Level</span>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {gradeToCEFR(dna.gradeLevel).level} — {gradeToCEFR(dna.gradeLevel).label}
+            </Badge>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
