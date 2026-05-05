@@ -42,7 +42,6 @@ export const Toolbar = ({
         Grammar Checker
       </h1>
       <div className="flex items-center gap-2">
-        {/* Status indicator */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {isChecking ? (
             <>
@@ -62,7 +61,6 @@ export const Toolbar = ({
           ) : null}
         </div>
 
-        {/* Action buttons */}
         <div className="flex items-center gap-1">
           {canUndo && onUndo && (
             <Button

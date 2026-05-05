@@ -20,7 +20,8 @@ export const POST = async (req: NextRequest) => {
   // Filter out UNKNOWN_TOKEN errors (flags unknown words/names as mistakes)
   // while keeping actual grammar and spelling errors
   const filteredMatches = data.matches.filter(
-    (match: any) => match.rule.id !== "UNKNOWN_TOKEN"
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (match: any) => match.rule.id !== "UNKNOWN_TOKEN",
   );
 
   return NextResponse.json({

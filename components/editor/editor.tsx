@@ -98,6 +98,22 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     await fetchAiDetect();
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/resume", {
+      method: "POST",
+      body: formData,
+    });
+
+    console.log(response);
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Toolbar */}
@@ -140,6 +156,10 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           onScroll={handleScroll}
           spellCheck={false}
         />
+      </div>
+
+      <div>
+        <input type="file" onChange={handleFileChange} />
       </div>
 
       {/* Feedback Panel - always visible */}

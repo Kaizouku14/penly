@@ -29,7 +29,9 @@ export const FeedbackPanel = ({
   onSelectMatch,
   onApplySuggestion,
 }: FeedbackPanelProps) => {
-  const [activeFilter, setActiveFilter] = React.useState<Category | "all">("all");
+  const [activeFilter, setActiveFilter] = React.useState<Category | "all">(
+    "all",
+  );
   const errorCount = result?.length ?? 0;
 
   const errorText = selectedMatch
@@ -50,7 +52,7 @@ export const FeedbackPanel = ({
     if (!result) return [];
     if (activeFilter === "all") return result;
     return result.filter(
-      (m) => getCategoryFromIssueType(m.rule.issueType) === activeFilter
+      (m) => getCategoryFromIssueType(m.rule.issueType) === activeFilter,
     );
   }, [result, activeFilter]);
 
@@ -125,9 +127,8 @@ export const FeedbackPanel = ({
 
   return (
     <div className="flex flex-col gap-2 max-h-72 overflow-y-auto rounded-md border border-border bg-muted/30 p-3">
-      {errorCount > 0 ? (
+      {errorCount > 0 && text.length > 0 ? (
         <>
-          {/* Filter bar */}
           <div className="flex flex-wrap gap-1 pb-2 border-b border-border">
             <Button
               onClick={() => setActiveFilter("all")}
@@ -155,13 +156,11 @@ export const FeedbackPanel = ({
               ),
             )}
           </div>
-
           <p className="text-xs text-muted-foreground mb-1">
             {filteredErrors.length > 0
               ? "Click an underlined word to see details."
               : "No errors in this category."}
           </p>
-
           {filteredErrors.map((m, i) => (
             <Button
               key={i}

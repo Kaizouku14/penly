@@ -22,7 +22,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Mobile-only components */}
+      {/* Mobile-only */}
       <WritingDNABottomSheet text={text} />
     </div>
   );
