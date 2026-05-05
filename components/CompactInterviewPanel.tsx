@@ -1,7 +1,5 @@
 "use client";
-
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronLeft, ChevronRight, Bookmark, Mic, Square } from "lucide-react";
@@ -77,7 +75,6 @@ export const CompactInterviewPanel = ({
 
   return (
     <div className="w-full space-y-3">
-      {/* Question Card - Compact */}
       <Card className="p-3 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
@@ -107,16 +104,13 @@ export const CompactInterviewPanel = ({
           </div>
         </div>
 
-        {/* Question Text */}
         <h3 className="font-medium text-sm leading-relaxed text-foreground">
           {currentQuestion.text}
         </h3>
       </Card>
 
-      {/* Answer Section - Only show if no critique */}
       {!critique && (
         <div className="space-y-2">
-          {/* Textarea */}
           <Textarea
             value={answerText}
             onChange={(e) => onAnswerChange(e.target.value)}
@@ -125,7 +119,6 @@ export const CompactInterviewPanel = ({
             className="min-h-24 text-sm resize-none"
           />
 
-          {/* Word count */}
           <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
             <span>Words typed in your answer</span>
             <span className="font-medium text-foreground">
@@ -133,11 +126,11 @@ export const CompactInterviewPanel = ({
             </span>
           </div>
 
-          {/* Recording button */}
           {recordedAudio ? (
             <div className="flex items-center gap-2 text-xs bg-blue-50 dark:bg-blue-950 p-2 rounded-md">
               <span className="text-blue-700 dark:text-blue-300 font-medium">
-                🎤 Recording attached ({Math.floor(recordedAudio.duration)}s)
+               <Mic className="size-4" />
+                Recording attached ({Math.floor(recordedAudio.duration)}s)
               </span>
               {onClearRecording && (
                 <Button
@@ -175,7 +168,6 @@ export const CompactInterviewPanel = ({
         </div>
       )}
 
-      {/* Feedback Section */}
       {critique && (
         <EnhancedFeedback
           critique={critique}
@@ -183,7 +175,6 @@ export const CompactInterviewPanel = ({
         />
       )}
 
-      {/* Navigation & Action Buttons - Compact */}
       <div className="flex gap-2">
         <Button
           onClick={onPrevious}
@@ -229,7 +220,6 @@ export const CompactInterviewPanel = ({
         </Button>
       </div>
 
-      {/* Progress Bar - Minimal */}
       <div className="space-y-1">
         <div className="flex gap-1 h-1">
           {Array.from({ length: totalQuestions }).map((_, idx) => (

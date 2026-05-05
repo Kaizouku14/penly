@@ -3,6 +3,8 @@
 import React from "react";
 import { WritingDNA } from "@/components/WritingDNA";
 import { useWritingDNA } from "@/hooks/useWritingDNA";
+import { Button } from "./ui/button";
+import { ArrowUp , Sparkle} from "lucide-react";
 
 interface WritingDNABottomSheetProps {
   text: string;
@@ -16,8 +18,8 @@ export const WritingDNABottomSheet = ({ text }: WritingDNABottomSheetProps) => {
 
   return (
     <>
-      {/* Trigger pill */}
-      <button
+      <Button
+        variant="outline"
         onClick={() => setOpen(true)}
         className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50
           flex items-center gap-2 px-4 py-2 rounded-full
@@ -25,11 +27,11 @@ export const WritingDNABottomSheet = ({ text }: WritingDNABottomSheetProps) => {
           text-sm font-medium whitespace-nowrap lg:hidden
           hover:shadow-lg transition-shadow"
       >
-        ✦ {dna.personality.label}
-        <span className="text-muted-foreground">↑</span>
-      </button>
+        <Sparkle />
+        {dna.personality.label}
+        <ArrowUp className="size-4 text-muted-foreground" />
+      </Button>
 
-      {/* Backdrop */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -37,7 +39,6 @@ export const WritingDNABottomSheet = ({ text }: WritingDNABottomSheetProps) => {
         />
       )}
 
-      {/* Sheet */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden
           bg-background rounded-t-2xl border-t border-border

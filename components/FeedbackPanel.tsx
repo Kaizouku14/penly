@@ -225,7 +225,7 @@ export const FeedbackPanel = ({
                         {m.shortMessage || m.message}
                       </p>
                     </div>
-                    <ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+                    <ChevronRight className="size-4 text-muted-foreground shrink-0" />
                   </Button>
                 ))
               ) : (

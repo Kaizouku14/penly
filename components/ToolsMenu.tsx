@@ -9,13 +9,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Wand2, Search, LogOut } from "lucide-react";
+import { MoreVertical, Wand2, Search, LogOut, Briefcase } from "lucide-react";
 
 interface ToolsMenuProps {
   onParaphrase: () => void;
   onAiDetect: () => void;
   onStopInterview?: () => void;
-  hasText: boolean;
+  onStartInterview?: () => void;
   isInterviewMode?: boolean;
 }
 
@@ -23,7 +23,7 @@ export const ToolsMenu = ({
   onParaphrase,
   onAiDetect,
   onStopInterview,
-  hasText,
+  onStartInterview,
   isInterviewMode = false,
 }: ToolsMenuProps) => {
   return (
@@ -33,7 +33,6 @@ export const ToolsMenu = ({
           variant="outline"
           size="sm"
           className="flex items-center gap-2"
-          disabled={!hasText && !isInterviewMode}
           title="More tools"
         >
           <MoreVertical className="size-4" />
@@ -55,7 +54,7 @@ export const ToolsMenu = ({
           <span>Check AI Content</span>
         </DropdownMenuItem>
 
-        {isInterviewMode && onStopInterview && (
+        {isInterviewMode && onStopInterview ? (
           <>
             {!isInterviewMode && <DropdownMenuSeparator />}
             <DropdownMenuItem
@@ -66,6 +65,14 @@ export const ToolsMenu = ({
               <span>Exit Interview</span>
             </DropdownMenuItem>
           </>
+        ) : (
+             <DropdownMenuItem
+              onClick={onStartInterview}
+              className="flex items-center gap-2"
+            >
+           <Briefcase className="size-4" />
+              <span className="hidden lg:inline">Interview</span>
+            </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

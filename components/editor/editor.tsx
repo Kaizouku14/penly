@@ -43,7 +43,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const [bookmarkedQuestions, setBookmarkedQuestions] = React.useState<
     Set<string>
   >(new Set());
-  const [resumeFileName, setResumeFileName] = React.useState<string>("");
   const isMobile = useMediaQuery("(max-width: 768px)");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = React.useRef<HTMLDivElement>(null);
@@ -147,8 +146,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     setIsUploadingResume(true);
 
     try {
-      setResumeFileName(file.name);
-
       const formData = new FormData();
       formData.append("file", file);
 
@@ -176,7 +173,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const handleStopInterview = () => {
     disableInterviewMode();
     setText("");
-    setResumeFileName("");
   };
 
   const handleEvaluateAnswer = async () => {
@@ -243,7 +239,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         />
       </div>
 
-      {/* Interview Mode: Compact Panel */}
       {isInterviewMode && currentQuestion ? (
         <Card className="p-4">
           <CompactInterviewPanel
@@ -285,13 +280,9 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         </Card>
       ) : (
         <>
-          {/* Normal Mode: Main Editor Card */}
           <Card className="overflow-hidden">
-            {/* Toolbar Header */}
 
-            {/* Editor Area */}
             <CardContent className="p-0 relative h-56 lg:h-80 overflow-hidden">
-              {/* Grammar Highlight Layer */}
               <div
                 ref={highlightLayerRef}
                 aria-hidden="true"
@@ -305,7 +296,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
                 )}
               </div>
 
-              {/* Textarea - interactive input */}
               <Textarea
                 ref={textareaRef}
                 className="absolute inset-0 p-3 w-full h-full font-mono text-sm
@@ -326,7 +316,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
               />
             </CardContent>
 
-            {/* Footer - Stats */}
             <CardFooter className="border-t border-border px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex gap-4">
                 <span>
@@ -346,14 +335,11 @@ export const Editor = ({ onTextChange }: EditorProps) => {
             </CardFooter>
           </Card>
 
-          {/* Feedback & Analytics Section */}
           <div className="space-y-4">
-            {/* Tone Analysis */}
             {text.length > 0 && (
               <ToneBar tone={tone} isAnalyzing={isAnalyzing} text={text} />
             )}
 
-            {/* Grammar Feedback */}
             <FeedbackPanel
               result={result}
               selectedMatch={selectedMatch}
@@ -365,7 +351,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         </>
       )}
 
-      {/* Dialogs */}
       <ParaphraseDialog
         isOpen={isParaphraseDialogOpen}
         isLoading={isParaphrasing}

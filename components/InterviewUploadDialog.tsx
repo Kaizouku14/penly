@@ -35,7 +35,6 @@ export const InterviewUploadDialog = ({
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
       setError("File size must be less than 5MB");
       return false;
     }
@@ -98,7 +97,6 @@ export const InterviewUploadDialog = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Upload Area */}
           <div
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -136,7 +134,6 @@ export const InterviewUploadDialog = ({
             </div>
           </div>
 
-          {/* Error Alert */}
           {error && (
             <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 flex gap-2">
               <AlertCircle className="size-4 text-destructive mt-0.5 shrink-0" />
@@ -144,7 +141,6 @@ export const InterviewUploadDialog = ({
             </div>
           )}
 
-          {/* Info Alert */}
           <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-3 flex gap-2">
             <Info className="size-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
             <p className="text-sm text-blue-800 dark:text-blue-300">
@@ -153,7 +149,6 @@ export const InterviewUploadDialog = ({
             </p>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-2 justify-end pt-2">
             <Button variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel

@@ -164,9 +164,7 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
         </CardTitle>
       </CardHeader>
 
-      {/* Content */}
       <CardContent className="space-y-6">
-        {/* Personality Section */}
         <Card className="border-l-4 border-l-accent/50 bg-accent/30 border-border">
           <CardContent className="pt-4 space-y-2">
             <div className="flex items-start justify-between">
@@ -183,9 +181,7 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
           </CardContent>
         </Card>
 
-        {/* Metrics Section */}
         <div className="space-y-3">
-          {/* Vocabulary Richness */}
           <MetricCard
             icon={<MessageCircle className="size-4" />}
             label="Vocabulary Richness"
@@ -196,7 +192,6 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
             tooltip="Measure of diverse word usage. Higher is better."
           />
 
-          {/* Sentence Length */}
           <MetricCard
             icon={<TrendingUp className="size-4 " />}
             label="Avg Sentence Length"
@@ -207,7 +202,6 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
             tooltip="Well-balanced length is 15-25 words per sentence."
           />
 
-          {/* Passive Voice */}
           <MetricCard
             icon={<BookOpen className="size-4" />}
             label="Passive Voice Usage"
@@ -218,7 +212,6 @@ export const WritingDNA = ({ text }: WritingDNAProps) => {
             tooltip="Lower is better for active, engaging writing."
           />
 
-          {/* Reading Level */}
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-background/50">
             <div className="flex items-center gap-2">
               <BookOpen className="size-4 text-muted-foreground" />

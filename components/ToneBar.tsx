@@ -58,7 +58,6 @@ export const ToneBar = ({ tone, isAnalyzing, text }: ToneBarProps) => {
 
         {tone && (
           <div className="space-y-3">
-            {/* Tone Badges */}
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={TONE_VARIANTS[tone.primary]} className="gap-1.5">
                 {TONE_ICONS[tone.primary]}
@@ -75,7 +74,6 @@ export const ToneBar = ({ tone, isAnalyzing, text }: ToneBarProps) => {
               )}
             </div>
 
-            {/* Tone Summary */}
             <p className="text-xs text-muted-foreground leading-relaxed">
               {tone.summary}
             </p>

@@ -114,7 +114,7 @@ export const EnhancedFeedback = ({
           className="w-full flex items-center justify-between mb-3 hover:opacity-80 transition-opacity"
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <CheckCircle2 className="size-5 text-green-600 dark:text-green-400 shrink-0" />
             <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 uppercase tracking-wide">
               Strengths
             </h4>
@@ -136,7 +136,7 @@ export const EnhancedFeedback = ({
                 key={idx}
                 className="text-sm text-green-900 dark:text-green-100 flex items-start gap-2"
               >
-                <span className="text-green-600 dark:text-green-400 font-bold mt-0.5 flex-shrink-0">
+                <span className="text-green-600 dark:text-green-400 font-bold mt-0.5 shrink-0">
                   ✓
                 </span>
                 <span>{strength}</span>
@@ -153,7 +153,7 @@ export const EnhancedFeedback = ({
           className="w-full flex items-center justify-between mb-3 hover:opacity-80 transition-opacity"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <AlertCircle className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
             <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 uppercase tracking-wide">
               Areas for Improvement
             </h4>
@@ -175,7 +175,7 @@ export const EnhancedFeedback = ({
                 key={idx}
                 className="text-sm text-amber-900 dark:text-amber-100 flex items-start gap-2"
               >
-                <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5 flex-shrink-0">
+                <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5 shrink-0">
                   •
                 </span>
                 <span>{area}</span>
@@ -192,7 +192,7 @@ export const EnhancedFeedback = ({
           className="w-full flex items-center justify-between mb-3 hover:opacity-80 transition-opacity"
         >
           <div className="flex items-center gap-2">
-            <Lightbulb className="size-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <Lightbulb className="size-5 text-blue-600 dark:text-blue-400 shrink-0" />
             <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 uppercase tracking-wide">
               Detailed Feedback
             </h4>

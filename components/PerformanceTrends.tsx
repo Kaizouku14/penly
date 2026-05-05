@@ -42,7 +42,9 @@ export const PerformanceTrends = ({
         {/* Average Score */}
         <Card className={`p-3 ${getBgColor(trend.averageRating)}`}>
           <div className="text-xs text-muted-foreground mb-1">Average</div>
-          <div className={`text-2xl font-bold ${getScoreColor(trend.averageRating)}`}>
+          <div
+            className={`text-2xl font-bold ${getScoreColor(trend.averageRating)}`}
+          >
             {trend.averageRating}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
@@ -51,9 +53,13 @@ export const PerformanceTrends = ({
         </Card>
 
         {/* Improvement Rate */}
-        <Card className={`p-3 ${improvementRate > 0 ? "bg-green-50 dark:bg-green-950" : "bg-gray-50 dark:bg-gray-900"}`}>
+        <Card
+          className={`p-3 ${improvementRate > 0 ? "bg-green-50 dark:bg-green-950" : "bg-gray-50 dark:bg-gray-900"}`}
+        >
           <div className="text-xs text-muted-foreground mb-1">Improvement</div>
-          <div className={`text-2xl font-bold ${improvementRate > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+          <div
+            className={`text-2xl font-bold ${improvementRate > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+          >
             {improvementRate > 0 ? "+" : ""}
             {improvementRate}%
           </div>
@@ -83,7 +89,9 @@ export const PerformanceTrends = ({
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {trend.totalQuestions}
           </div>
-          <div className="text-xs text-muted-foreground mt-1">Questions Done</div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Questions Done
+          </div>
         </Card>
       </div>
 
@@ -94,32 +102,39 @@ export const PerformanceTrends = ({
             Performance by Category
           </h4>
           <div className="space-y-2">
-            {Object.entries(trend.categoryBreakdown).map(([category, score]) => (
-              <div key={category} className="flex items-center justify-between">
-                <span className="text-sm text-foreground capitalize">
-                  {category.replace(/[-_]/g, " ")}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        score >= 8
-                          ? "bg-green-500"
-                          : score >= 6
-                            ? "bg-blue-500"
-                            : score >= 4
-                              ? "bg-amber-500"
-                              : "bg-red-500"
-                      }`}
-                      style={{ width: `${(score / 10) * 100}%` }}
-                    />
-                  </div>
-                  <span className={`text-xs font-semibold w-8 text-right ${getScoreColor(score)}`}>
-                    {score}
+            {Object.entries(trend.categoryBreakdown).map(
+              ([category, score]) => (
+                <div
+                  key={category}
+                  className="flex items-center justify-between"
+                >
+                  <span className="text-sm text-foreground capitalize">
+                    {category.replace(/[-_]/g, " ")}
                   </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          score >= 8
+                            ? "bg-green-500"
+                            : score >= 6
+                              ? "bg-blue-500"
+                              : score >= 4
+                                ? "bg-amber-500"
+                                : "bg-red-500"
+                        }`}
+                        style={{ width: `${(score / 10) * 100}%` }}
+                      />
+                    </div>
+                    <span
+                      className={`text-xs font-semibold w-8 text-right ${getScoreColor(score)}`}
+                    >
+                      {score}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </Card>
       )}
@@ -127,7 +142,7 @@ export const PerformanceTrends = ({
       {/* Quick Insights */}
       <Card className="p-3 bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800">
         <div className="flex items-start gap-2">
-          <TrendingUp className="size-4 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
+          <TrendingUp className="size-4 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0" />
           <div className="text-sm text-indigo-900 dark:text-indigo-100">
             <p className="font-semibold mb-1">Quick Insight</p>
             <p>
