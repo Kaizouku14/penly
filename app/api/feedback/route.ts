@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  generateGrammarFeedback,
+} from "@/lib/services/writingServices";
+import { validateRequestBody, ApiError } from "@/lib/api/apiUtils";
 
 interface FeedbackRequest {
   message: string;
@@ -10,69 +14,34 @@ interface FeedbackResponse {
   explanation: string;
 }
 
+const DEFAULT_FEEDBACK_RESPONSE: FeedbackResponse = {
+  explanation: "Unable to generate explanation",
+};
+
 export const POST = async (
   req: NextRequest,
 ): Promise<NextResponse<FeedbackResponse>> => {
-  const { message, ruleDescription, errorText } =
-    (await req.json()) as FeedbackRequest;
-
-  const apiKey = process.env.GROQ_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { explanation: "API key not configured" },
-      { status: 500 },
-    );
-  }
-
   try {
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a helpful English writing assistant. Explain grammar errors in simple, friendly language in 2-3 sentences.",
-            },
-            {
-              role: "user",
-              content: `Explain this grammar error: "${message}" for the word/phrase "${errorText}". Rule: ${ruleDescription}`,
-            },
-          ],
-          max_tokens: 150,
-        }),
-      },
+    const body = (await req.json()) as unknown;
+    const { message, ruleDescription, errorText } = validateRequestBody<FeedbackRequest>(
+      body,
+      ["message", "ruleDescription", "errorText"],
     );
 
-    if (!response.ok) {
-      console.error("Groq API error:", response.statusText);
-      return NextResponse.json(
-        { explanation: "Failed to get explanation" },
-        { status: response.status },
-      );
-    }
-
-    const data = (await response.json()) as {
-      choices: Array<{ message: { content: string } }>;
-    };
-
-    const explanation =
-      data.choices?.[0]?.message?.content || "Unable to generate explanation";
+    const explanation = await generateGrammarFeedback(
+      message,
+      ruleDescription,
+      errorText,
+    );
 
     return NextResponse.json({ explanation });
-  } catch (error: unknown) {
-    console.error("Feedback error:", error);
-    return NextResponse.json(
-      { explanation: "An error occurred" },
-      { status: 500 },
-    );
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return NextResponse.json(DEFAULT_FEEDBACK_RESPONSE, {
+        status: error.statusCode,
+      });
+    }
+    console.error("Failed to generate feedback", error);
+    return NextResponse.json(DEFAULT_FEEDBACK_RESPONSE, { status: 500 });
   }
 };

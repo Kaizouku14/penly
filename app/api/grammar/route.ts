@@ -1,31 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkGrammar } from "@/lib/services/grammarService";
+import { validateRequestBody, errorResponse } from "@/lib/api/apiUtils";
+
+interface GrammarRequest {
+  text: string;
+}
 
 export const POST = async (req: NextRequest) => {
-  const { text } = await req.json();
+  try {
+    const body = (await req.json()) as unknown;
+    const { text } = validateRequestBody<GrammarRequest>(body, ["text"]);
 
-  const params = new URLSearchParams();
-  params.append("text", text);
-  params.append("language", "en-US");
-
-  const response = await fetch("https://api.languagetool.org/v2/check", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: params.toString(),
-  });
-
-  const data = await response.json();
-
-  // Filter out UNKNOWN_TOKEN errors (flags unknown words/names as mistakes)
-  // while keeping actual grammar and spelling errors
-  const filteredMatches = data.matches.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (match: any) => match.rule.id !== "UNKNOWN_TOKEN",
-  );
-
-  return NextResponse.json({
-    ...data,
-    matches: filteredMatches,
-  });
+    const result = await checkGrammar(text);
+    return NextResponse.json(result);
+  } catch (error) {
+    const { statusCode, body } = errorResponse(
+      error,
+      "Failed to check grammar",
+    );
+    return NextResponse.json(body, { status: statusCode });
+  }
 };
