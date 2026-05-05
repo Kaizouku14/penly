@@ -4,7 +4,13 @@ import React from "react";
 import { Match, Category } from "@/types/match";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFeedback } from "@/hooks/useFeedback";
 import { AlertCircle, ChevronRight, X } from "lucide-react";
@@ -95,32 +101,33 @@ export const FeedbackPanel = ({
           </p>
 
           {/* Suggestions */}
-          {selectedMatch.replacements && selectedMatch.replacements.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Suggestions
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {selectedMatch.replacements.slice(0, 5).map((r, i) => (
-                  <Button
-                    key={i}
-                    onClick={() =>
-                      onApplySuggestion(
-                        r.value,
-                        selectedMatch.offset,
-                        selectedMatch.length,
-                      )
-                    }
-                    variant="secondary"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    {r.value}
-                  </Button>
-                ))}
+          {selectedMatch.replacements &&
+            selectedMatch.replacements.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Suggestions
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedMatch.replacements.slice(0, 5).map((r, i) => (
+                    <Button
+                      key={i}
+                      onClick={() =>
+                        onApplySuggestion(
+                          r.value,
+                          selectedMatch.offset,
+                          selectedMatch.length,
+                        )
+                      }
+                      variant="secondary"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      {r.value}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* AI Explanation */}
           {(explanation || isLoading) && (
@@ -161,8 +168,9 @@ export const FeedbackPanel = ({
         <>
           {/* Category Filter Tabs */}
           <div className="border-t border-border">
-            <Tabs 
-              value={activeFilter} 
+            <Tabs
+              value={activeFilter}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onValueChange={(v) => setActiveFilter(v as any)}
               className="w-full"
             >
@@ -175,9 +183,12 @@ export const FeedbackPanel = ({
                 </TabsTrigger>
                 {(["spelling", "grammar", "punctuation", "style"] as const).map(
                   (category) => {
-                    const count = result?.filter(
-                      (m) => getCategoryFromIssueType(m.rule.issueType) === category,
-                    ).length ?? 0;
+                    const count =
+                      result?.filter(
+                        (m) =>
+                          getCategoryFromIssueType(m.rule.issueType) ===
+                          category,
+                      ).length ?? 0;
                     return (
                       <TabsTrigger
                         key={category}
@@ -233,7 +244,9 @@ export const FeedbackPanel = ({
             <AlertCircle className="size-8 text-muted-foreground/40" />
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
-                {text.trim().length < 3 ? "Ready to check" : "No issues detected"}
+                {text.trim().length < 3
+                  ? "Ready to check"
+                  : "No issues detected"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {text.trim().length < 3

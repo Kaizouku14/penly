@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "../ui/textarea";
 import { highlightText } from "./helper";
 import { ToneBar } from "@/components/ToneBar";
@@ -21,10 +20,9 @@ import { Toolbar } from "@/components/Toolbar";
 import { ParaphraseDialog } from "@/components/ParaphraseDialog";
 import { AIDetectDialog } from "@/components/AIDetectDialog";
 import { InterviewUploadDialog } from "@/components/InterviewUploadDialog";
-import { JobModePanel } from "@/components/JobModePanelEnhanced";
+import { CompactInterviewPanel } from "@/components/CompactInterviewPanel";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { parseInterviewQuestions } from "@/lib/utils/parseQuestions";
-import { Upload } from "lucide-react";
 
 interface EditorProps {
   onTextChange?: (text: string) => void;
@@ -70,12 +68,9 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const { critique, isCritiquing, fetchCritique } = useInterviewCritique();
   const {
     isRecording,
-    isPlayingBack,
     recordedAudio,
-    waveformData,
     startRecording,
     stopRecording,
-    playback,
     clearRecording,
   } = useVoiceRecording();
   const { saveAnswer, getQuestionHistory } = useAnswerHistory();
@@ -232,126 +227,142 @@ export const Editor = ({ onTextChange }: EditorProps) => {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {/* Main Editor Card */}
-      <Card className="overflow-hidden">
-        {/* Toolbar Header */}
-        <div className="border-b border-border px-4 py-3">
-          <Toolbar
-            text={text}
-            onClear={handleClear}
-            onParaphrase={!isInterviewMode ? handleParaphrase : undefined}
-            onAiDetect={!isInterviewMode ? handleAiDetect : undefined}
-            onStartInterview={!isInterviewMode ? handleStartInterview : undefined}
-            onStopInterview={isInterviewMode ? handleStopInterview : undefined}
-            onUndo={paraphraseHistory ? handleUndoParaphrase : undefined}
-            canUndo={paraphraseHistory !== null}
-            isChecking={isChecking}
-            errorCount={errorCount}
-            isJobMode={isInterviewMode}
-          />
-        </div>
-
-        {/* Editor Area */}
-        <CardContent className="p-0 relative h-56 lg:h-80 overflow-hidden">
-          {/* Grammar Highlight Layer */}
-          <div
-            ref={highlightLayerRef}
-            aria-hidden="true"
-            className="absolute inset-0 p-3 font-mono text-sm wrap-break-word overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
-          >
-            {highlightText(text, result ?? [], selectedMatch, setSelectedMatch)}
-          </div>
-
-          {/* Textarea - interactive input */}
-          <Textarea
-            ref={textareaRef}
-            className="absolute inset-0 p-3 w-full h-full font-mono text-sm
-              bg-transparent text-foreground caret-foreground
-              border-none resize-none outline-none focus-visible:ring-0
-              leading-relaxed wrap-break-word"
-            value={text}
-            placeholder={
-              isInterviewMode
-                ? currentQuestion?.text || "Loading question..."
-                : isMobile
-                  ? "Start typing..."
-                  : "Start typing or paste your text here..."
-            }
-            onChange={(e) => handleTextChange(e.target.value)}
-            onScroll={handleScroll}
-            spellCheck={false}
-          />
-        </CardContent>
-
-        {/* Footer - Stats */}
-        <CardFooter className="border-t border-border px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex gap-4">
-            <span>
-              Words: <strong className="text-foreground">{wordCount}</strong>
-            </span>
-            <span>
-              Characters:{" "}
-              <strong className="text-foreground">{text.length}</strong>
-            </span>
-          </div>
-          {text.length > 0 && (
-            <span className="text-xs text-accent-foreground">
-              Reading time: ~{Math.ceil(wordCount / 200)} min
-            </span>
-          )}
-        </CardFooter>
-      </Card>
-
-      {/* Feedback & Analytics Section */}
-      <div className="space-y-4">
-        {/* Tone Analysis */}
-        {text.length > 0 && (
-          <ToneBar tone={tone} isAnalyzing={isAnalyzing} text={text} />
-        )}
-
-        {/* Grammar Feedback */}
-        <FeedbackPanel
-          result={result}
-          selectedMatch={selectedMatch}
+      <div className="border-b border-border px-4 py-3">
+        <Toolbar
           text={text}
-          onSelectMatch={setSelectedMatch}
-          onApplySuggestion={handleApplySuggestion}
+          onClear={handleClear}
+          onParaphrase={handleParaphrase}
+          onAiDetect={handleAiDetect}
+          onStartInterview={!isInterviewMode ? handleStartInterview : undefined}
+          onStopInterview={isInterviewMode ? handleStopInterview : undefined}
+          onUndo={paraphraseHistory ? handleUndoParaphrase : undefined}
+          canUndo={paraphraseHistory !== null}
+          isChecking={isChecking}
+          errorCount={errorCount}
+          isJobMode={isInterviewMode}
         />
       </div>
 
-      {/* Job Mode Panel */}
-      {isInterviewMode && currentQuestion && (
-        <JobModePanel
-          currentQuestion={currentQuestion}
-          currentIndex={currentQuestionIndex}
-          totalQuestions={interviewQuestions.length}
-          critique={critique}
-          isCritiquing={isCritiquing}
-          onNext={handleNextQuestion}
-          onPrevious={handlePreviousQuestion}
-          onEvaluate={handleEvaluateAnswer}
-          onClose={() => disableInterviewMode()}
-          hasNextQuestion={hasNextQuestion}
-          hasPreviousQuestion={hasPreviousQuestion}
-          isRecording={isRecording}
-          isPlayingBack={isPlayingBack}
-          recordedAudio={recordedAudio}
-          waveformData={waveformData}
-          onStartRecording={startRecording}
-          onStopRecording={stopRecording}
-          onPlayback={playback}
-          onClearRecording={clearRecording}
-          answerText={text}
-          performanceTrend={trend}
-          improvementRate={improvementRate}
-          questionHistory={currentQuestionHistory}
-          isBookmarked={
-            currentQuestion
-              ? bookmarkedQuestions.has(currentQuestion.id)
-              : false
-          }
-          onBookmark={handleToggleBookmark}
-        />
+      {/* Interview Mode: Compact Panel */}
+      {isInterviewMode && currentQuestion ? (
+        <Card className="p-4">
+          <CompactInterviewPanel
+            currentQuestion={currentQuestion}
+            currentIndex={currentQuestionIndex}
+            totalQuestions={interviewQuestions.length}
+            answerText={text}
+            critique={critique}
+            isCritiquing={isCritiquing}
+            onAnswerChange={handleTextChange}
+            onNext={handleNextQuestion}
+            onPrevious={handlePreviousQuestion}
+            onEvaluate={handleEvaluateAnswer}
+            hasNextQuestion={hasNextQuestion}
+            hasPreviousQuestion={hasPreviousQuestion}
+            isRecording={isRecording}
+            recordedAudio={recordedAudio}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            onClearRecording={clearRecording}
+            performanceTrend={trend}
+            improvementRate={improvementRate}
+            questionHistory={currentQuestionHistory}
+            isBookmarked={
+              currentQuestion
+                ? bookmarkedQuestions.has(currentQuestion.id)
+                : false
+            }
+            onBookmark={handleToggleBookmark}
+          />
+
+          <FeedbackPanel
+            result={result}
+            selectedMatch={selectedMatch}
+            text={text}
+            onSelectMatch={setSelectedMatch}
+            onApplySuggestion={handleApplySuggestion}
+          />
+        </Card>
+      ) : (
+        <>
+          {/* Normal Mode: Main Editor Card */}
+          <Card className="overflow-hidden">
+            {/* Toolbar Header */}
+
+            {/* Editor Area */}
+            <CardContent className="p-0 relative h-56 lg:h-80 overflow-hidden">
+              {/* Grammar Highlight Layer */}
+              <div
+                ref={highlightLayerRef}
+                aria-hidden="true"
+                className="absolute inset-0 p-3 font-mono text-sm wrap-break-word overflow-hidden pointer-events-none select-none text-transparent leading-relaxed"
+              >
+                {highlightText(
+                  text,
+                  result ?? [],
+                  selectedMatch,
+                  setSelectedMatch,
+                )}
+              </div>
+
+              {/* Textarea - interactive input */}
+              <Textarea
+                ref={textareaRef}
+                className="absolute inset-0 p-3 w-full h-full font-mono text-sm
+                  bg-transparent text-foreground caret-foreground
+                  border-none resize-none outline-none focus-visible:ring-0
+                  leading-relaxed wrap-break-word"
+                value={text}
+                placeholder={
+                  isInterviewMode
+                    ? currentQuestion?.text || "Loading question..."
+                    : isMobile
+                      ? "Start typing..."
+                      : "Start typing or paste your text here..."
+                }
+                onChange={(e) => handleTextChange(e.target.value)}
+                onScroll={handleScroll}
+                spellCheck={false}
+              />
+            </CardContent>
+
+            {/* Footer - Stats */}
+            <CardFooter className="border-t border-border px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex gap-4">
+                <span>
+                  Words:{" "}
+                  <strong className="text-foreground">{wordCount}</strong>
+                </span>
+                <span>
+                  Characters:{" "}
+                  <strong className="text-foreground">{text.length}</strong>
+                </span>
+              </div>
+              {text.length > 0 && (
+                <span className="text-xs text-accent-foreground">
+                  Reading time: ~{Math.ceil(wordCount / 200)} min
+                </span>
+              )}
+            </CardFooter>
+          </Card>
+
+          {/* Feedback & Analytics Section */}
+          <div className="space-y-4">
+            {/* Tone Analysis */}
+            {text.length > 0 && (
+              <ToneBar tone={tone} isAnalyzing={isAnalyzing} text={text} />
+            )}
+
+            {/* Grammar Feedback */}
+            <FeedbackPanel
+              result={result}
+              selectedMatch={selectedMatch}
+              text={text}
+              onSelectMatch={setSelectedMatch}
+              onApplySuggestion={handleApplySuggestion}
+            />
+          </div>
+        </>
       )}
 
       {/* Dialogs */}

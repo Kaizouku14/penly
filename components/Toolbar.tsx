@@ -47,7 +47,7 @@ export const Toolbar = ({
     <div className="flex flex-col gap-3 w-full md:flex-row md:items-center md:justify-between">
       {/* Left: Title */}
       <h2 className="text-sm font-semibold tracking-wide text-foreground">
-        Grammar Checker
+        {isJobMode ? "Job Mode" : "Grammar Checker"}
       </h2>
 
       {/* Right: Controls Group - Responsive */}
@@ -55,30 +55,39 @@ export const Toolbar = ({
         {/* Status Badge - Full width on mobile */}
         <div className="shrink-0">
           {isJobMode ? (
-            <Badge variant="secondary" className="gap-1.5 text-blue-400 w-full md:w-auto justify-center">
+            <Badge
+              variant="secondary"
+              className="gap-1.5 text-blue-400 w-full md:w-auto justify-center"
+            >
               <span className="size-1.5 rounded-full bg-blue-400" />
               Interview Mode
             </Badge>
           ) : isChecking ? (
-            <Badge variant="outline" className="gap-1.5 text-amber-400 w-full md:w-auto justify-center">
+            <Badge
+              variant="outline"
+              className="gap-1.5 text-amber-400 w-full md:w-auto justify-center"
+            >
               <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
               Checking...
             </Badge>
           ) : errorCount > 0 ? (
-            <Badge variant="destructive" className="gap-1.5 text-red-400 w-full md:w-auto justify-center">
+            <Badge
+              variant="destructive"
+              className="gap-1.5 text-red-400 w-full md:w-auto justify-center"
+            >
               <span className="size-1.5 rounded-full bg-red-400" />
               {errorCount} {errorCount === 1 ? "issue" : "issues"}
             </Badge>
           ) : hasText ? (
-            <Badge variant="secondary" className="gap-1.5 text-emerald-400 w-full md:w-auto justify-center">
+            <Badge
+              variant="secondary"
+              className="gap-1.5 text-emerald-400 w-full md:w-auto justify-center"
+            >
               <span className="size-1.5 rounded-full bg-emerald-400" />
               Good
             </Badge>
           ) : null}
         </div>
-
-        {/* Separator - Hidden on mobile */}
-        <div className="hidden md:block h-5 w-px bg-border" />
 
         {/* Action Buttons - Primary Actions */}
         <div className="flex items-center gap-1 w-full md:w-auto">
@@ -148,15 +157,13 @@ export const Toolbar = ({
             <span className="hidden lg:inline">Clear</span>
           </Button>
 
-          {onParaphrase && onAiDetect && (
-            <ToolsMenu
-              onParaphrase={onParaphrase}
-              onAiDetect={onAiDetect}
-              onStopInterview={onStopInterview}
-              hasText={hasText}
-              isInterviewMode={isJobMode}
-            />
-          )}
+          <ToolsMenu
+            onParaphrase={onParaphrase}
+            onAiDetect={onAiDetect}
+            onStopInterview={onStopInterview}
+            hasText={hasText}
+            isInterviewMode={isJobMode}
+          />
         </div>
       </div>
     </div>

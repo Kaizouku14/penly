@@ -2,7 +2,14 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, Lightbulb, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  AlertCircle,
+  CheckCircle2,
+  TrendingUp,
+} from "lucide-react";
 import { InterviewCritique } from "@/types/interview";
 
 interface EnhancedFeedbackProps {
@@ -37,9 +44,12 @@ export const EnhancedFeedback = ({
   };
 
   const getRatingBgColor = (rating: number) => {
-    if (rating >= 8) return "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800";
-    if (rating >= 6) return "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800";
-    if (rating >= 4) return "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800";
+    if (rating >= 8)
+      return "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800";
+    if (rating >= 6)
+      return "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800";
+    if (rating >= 4)
+      return "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800";
     return "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800";
   };
 
@@ -55,7 +65,9 @@ export const EnhancedFeedback = ({
       >
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-center">
-            <span className={`text-3xl font-bold ${getRatingColor(critique.rating)}`}>
+            <span
+              className={`text-3xl font-bold ${getRatingColor(critique.rating)}`}
+            >
               {critique.rating}
             </span>
             <span className="text-xs text-muted-foreground">/10</span>

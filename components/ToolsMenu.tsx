@@ -40,30 +40,24 @@ export const ToolsMenu = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        {!isInterviewMode && (
-          <>
-            <DropdownMenuItem
-              onClick={onParaphrase}
-              className="flex items-center gap-2"
-            >
-              <Wand2 className="size-4" />
-              <span>Paraphrase</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={onAiDetect}
-              className="flex items-center gap-2"
-            >
-              <Search className="size-4" />
-              <span>Check AI Content</span>
-            </DropdownMenuItem>
-          </>
-        )}
+        <DropdownMenuItem
+          onClick={onParaphrase}
+          className="flex items-center gap-2"
+        >
+          <Wand2 className="size-4" />
+          <span>Paraphrase</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={onAiDetect}
+          className="flex items-center gap-2"
+        >
+          <Search className="size-4" />
+          <span>Check AI Content</span>
+        </DropdownMenuItem>
 
         {isInterviewMode && onStopInterview && (
           <>
-            {!isInterviewMode && (
-              <DropdownMenuSeparator />
-            )}
+            {!isInterviewMode && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onClick={onStopInterview}
               className="flex items-center gap-2 text-destructive focus:text-destructive"

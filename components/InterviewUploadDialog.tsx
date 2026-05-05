@@ -34,9 +34,9 @@ export const InterviewUploadDialog = ({
       return false;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      // 10MB limit
-      setError("File size must be less than 10MB");
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
+      setError("File size must be less than 5MB");
       return false;
     }
 
@@ -130,7 +130,7 @@ export const InterviewUploadDialog = ({
                   Drop your resume here or click to select
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  PDF file • Max 10MB
+                  PDF file • Max 5MB
                 </p>
               </div>
             </div>
@@ -139,16 +139,17 @@ export const InterviewUploadDialog = ({
           {/* Error Alert */}
           {error && (
             <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 flex gap-2">
-              <AlertCircle className="size-4 text-destructive mt-0.5 flex-shrink-0" />
+              <AlertCircle className="size-4 text-destructive mt-0.5 shrink-0" />
               <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
           {/* Info Alert */}
           <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-3 flex gap-2">
-            <Info className="size-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <Info className="size-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              Questions will be generated based on your resume content for targeted practice.
+              Questions will be generated based on your resume content for
+              targeted practice.
             </p>
           </div>
 
@@ -157,7 +158,11 @@ export const InterviewUploadDialog = ({
             <Button variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
-            <Button onClick={handleClick} disabled={isLoading} className="gap-2">
+            <Button
+              onClick={handleClick}
+              disabled={isLoading}
+              className="gap-2"
+            >
               {isLoading ? (
                 <>
                   <span className="inline-block animate-spin">⟳</span>
