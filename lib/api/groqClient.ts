@@ -40,26 +40,41 @@ export async function callGroqApi(
 ): Promise<string> {
   const apiKey = validateApiKey();
 
+  const payload = {
+    model: config?.model || DEFAULT_MODEL,
+    messages,
+    max_tokens: config?.max_tokens || 300,
+  };
+
+  console.log("📡 Calling Groq API with payload:", {
+    model: payload.model,
+    max_tokens: payload.max_tokens,
+    messageCount: messages.length,
+  });
+
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: config?.model || DEFAULT_MODEL,
-      messages,
-      max_tokens: config?.max_tokens || 300,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    console.error("Groq API error:", response.statusText);
+    const errorText = await response.text();
+    console.error("🔴 Groq API error:", {
+      status: response.status,
+      statusText: response.statusText,
+      errorBody: errorText,
+    });
     throw new Error(`Groq API returned ${response.status}: ${response.statusText}`);
   }
 
   const data = (await response.json()) as GroqResponse;
   const content = data.choices?.[0]?.message?.content;
+
+  console.log("✅ Groq API response received, content length:", content?.length);
 
   if (!content) {
     throw new Error("No content in Groq API response");
@@ -75,9 +90,16 @@ export async function callGroqApi(
  */
 export function parseJsonResponse<T>(content: string): T {
   try {
-    return JSON.parse(content) as T;
+    console.log("📋 Parsing JSON response, content preview:", content.substring(0, 200));
+    const parsed = JSON.parse(content) as T;
+    console.log("✅ JSON parsed successfully");
+    return parsed;
   } catch (error) {
-    console.error("Failed to parse JSON response:", error, content);
+    console.error("🔴 Failed to parse JSON response:", {
+      error,
+      contentPreview: content.substring(0, 500),
+      contentLength: content.length,
+    });
     throw new Error(`Invalid JSON in API response: ${content.substring(0, 100)}`);
   }
 }

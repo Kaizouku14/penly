@@ -14,7 +14,6 @@ import { useInterviewMode } from "@/hooks/useInterviewMode";
 import { useInterviewCritique } from "@/hooks/useInterviewCritique";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useAnswerHistory } from "@/hooks/useAnswerHistory";
-import { usePerformanceAnalytics } from "@/hooks/usePerformanceAnalytics";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { Toolbar } from "@/components/Toolbar";
 import { ParaphraseDialog } from "@/components/ParaphraseDialog";
@@ -23,6 +22,7 @@ import { InterviewUploadDialog } from "@/components/InterviewUploadDialog";
 import { CompactInterviewPanel } from "@/components/CompactInterviewPanel";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { parseInterviewQuestions } from "@/lib/utils/parseQuestions";
+import { useInterviewSessionStorage } from "@/hooks/useInterviewSessionStorage";
 
 interface EditorProps {
   onTextChange?: (text: string) => void;
@@ -40,9 +40,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   const [isInterviewUploadDialogOpen, setIsInterviewUploadDialogOpen] =
     React.useState(false);
   const [isUploadingResume, setIsUploadingResume] = React.useState(false);
-  const [bookmarkedQuestions, setBookmarkedQuestions] = React.useState<
-    Set<string>
-  >(new Set());
   const isMobile = useMediaQuery("(max-width: 768px)");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = React.useRef<HTMLDivElement>(null);
@@ -64,7 +61,7 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     hasNextQuestion,
     hasPreviousQuestion,
   } = useInterviewMode();
-  const { critique, isCritiquing, fetchCritique } = useInterviewCritique();
+  const { critique, isCritiquing, error: critiqueError, fetchCritique, clearCritique } = useInterviewCritique();
   const {
     isRecording,
     recordedAudio,
@@ -73,17 +70,58 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     clearRecording,
   } = useVoiceRecording();
   const { saveAnswer, getQuestionHistory } = useAnswerHistory();
-  const { trend, addMetric, getImprovementRate } = usePerformanceAnalytics();
+  const {
+    sessionData,
+    isLoaded: isSessionLoaded,
+    error: sessionError,
+    initializeSession,
+    setCurrentQuestionIndex,
+    updateAnswer,
+    getAnswer,
+    clearSession,
+  } = useInterviewSessionStorage();
 
   const errorCount = result?.length ?? 0;
-  const improvementRate = getImprovementRate();
   const currentQuestionHistory =
     currentQuestion && isInterviewMode
       ? getQuestionHistory(currentQuestion.id)
       : null;
   const wordCount = text ? text.trim().split(/\s+/).length : 0;
 
-  // Sync scroll position between textarea and highlight layer
+  // Restore session on mount
+  React.useEffect(() => {
+    if (isSessionLoaded && sessionData && !isInterviewMode) {
+      // Restore interview session
+      enableInterviewMode(sessionData.resumeQuestions);
+      setCurrentQuestionIndex(sessionData.currentQuestionIndex);
+
+      // Restore current question's answer
+      if (currentQuestion && sessionData.resumeQuestions.length > 0) {
+        const currentQ = sessionData.resumeQuestions[sessionData.currentQuestionIndex];
+        const storedAnswer = getAnswer(currentQ.id);
+        if (storedAnswer) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setText(storedAnswer.text);
+        }
+      }
+    }
+  }, [currentQuestion, enableInterviewMode, getAnswer, isInterviewMode, isSessionLoaded, sessionData, setCurrentQuestionIndex]);
+
+  // Save answer to session storage whenever text or recording changes
+  React.useEffect(() => {
+    if (!isInterviewMode || !currentQuestion || !isSessionLoaded) return;
+
+    const timer = setTimeout(() => {
+      updateAnswer({
+        questionId: currentQuestion.id,
+        text,
+        timestamp: Date.now(),
+        wordCount: text.trim().split(/\s+/).filter((w) => w.length > 0).length,
+      });
+    }, 1000); // Debounce saves
+
+    return () => clearTimeout(timer);
+  }, [text, isInterviewMode, currentQuestion, isSessionLoaded, updateAnswer]);
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
     const target = e.target as HTMLTextAreaElement;
     if (highlightLayerRef.current) {
@@ -156,6 +194,9 @@ export const Editor = ({ onTextChange }: EditorProps) => {
 
       const data = await response.json();
       const parsedQuestions = parseInterviewQuestions(data.questions);
+
+      // Initialize session with new questions
+      initializeSession(parsedQuestions);
       enableInterviewMode(parsedQuestions);
       setText("");
       setIsInterviewUploadDialogOpen(false);
@@ -172,26 +213,61 @@ export const Editor = ({ onTextChange }: EditorProps) => {
 
   const handleStopInterview = () => {
     disableInterviewMode();
+    clearSession();
     setText("");
   };
 
   const handleEvaluateAnswer = async () => {
+    console.log("🔍 Evaluate button clicked");
+    console.log("Current question:", currentQuestion);
+    console.log("Text answer:", text);
+    console.log("Recorded audio:", recordedAudio);
+
     if (currentQuestion && text.trim()) {
-      await fetchCritique(currentQuestion.text, text);
+      console.log("📝 Evaluating text answer...");
+      const result = await fetchCritique(currentQuestion.text, text);
+      console.log("✅ Critique result:", result);
 
       // Save answer to history
-      if (critique) {
-        saveAnswer(currentQuestion.id, text, critique, recordedAudio?.duration);
+      if (result) {
+        console.log("💾 Saving to history...");
+        saveAnswer(currentQuestion.id, text, result, recordedAudio?.duration);
 
-        // Add to performance analytics
-        addMetric({
+        // Update session storage with critique
+        updateAnswer({
           questionId: currentQuestion.id,
-          rating: critique.rating,
+          text,
+          critique: result,
           timestamp: Date.now(),
-          category: currentQuestion.category,
-          confidence: critique.confidence,
+          wordCount: text.trim().split(/\s+/).filter((w) => w.length > 0).length,
         });
+      } else {
+        console.error("❌ No critique result returned");
       }
+    } else if (currentQuestion && recordedAudio) {
+      console.log("🎤 Evaluating voice-only answer...");
+      const result = await fetchCritique(currentQuestion.text, `[Voice Recording: ${recordedAudio.duration}s]`);
+      console.log("✅ Critique result:", result);
+
+      if (result) {
+        console.log("💾 Saving to history...");
+        saveAnswer(currentQuestion.id, `[Voice Response]`, result, recordedAudio.duration);
+
+        // Update session storage with critique and audio
+        updateAnswer({
+          questionId: currentQuestion.id,
+          text: `[Voice Response]`,
+          critique: result,
+          timestamp: Date.now(),
+          wordCount: 0,
+        });
+      } else {
+        console.error("❌ No critique result returned");
+      }
+    } else {
+      console.error("❌ No text or audio to evaluate");
+      console.error("Text trimmed:", text.trim());
+      console.error("Has recorded audio:", !!recordedAudio);
     }
   };
 
@@ -199,30 +275,52 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     nextQuestion();
     setText("");
     clearRecording();
+    clearCritique();
+
+    // Update session index and restore previous answer if available
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex < interviewQuestions.length) {
+      setCurrentQuestionIndex(nextIndex);
+      const nextQuestion = interviewQuestions[nextIndex];
+      const storedAnswer = getAnswer(nextQuestion.id);
+      if (storedAnswer) {
+        setText(storedAnswer.text);
+      }
+    }
   };
 
   const handlePreviousQuestion = () => {
     previousQuestion();
     setText("");
     clearRecording();
-  };
+    clearCritique();
 
-  const handleToggleBookmark = () => {
-    if (currentQuestion) {
-      setBookmarkedQuestions((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(currentQuestion.id)) {
-          newSet.delete(currentQuestion.id);
-        } else {
-          newSet.add(currentQuestion.id);
-        }
-        return newSet;
-      });
+    // Update session index and restore previous answer if available
+    const prevIndex = currentQuestionIndex - 1;
+    if (prevIndex >= 0) {
+      setCurrentQuestionIndex(prevIndex);
+      const prevQuestion = interviewQuestions[prevIndex];
+      const storedAnswer = getAnswer(prevQuestion.id);
+      if (storedAnswer) {
+        setText(storedAnswer.text);
+      }
     }
   };
 
   return (
     <div className="flex flex-col gap-4 w-full">
+      {sessionError && (
+        <div className="px-4 py-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded text-xs text-red-600 dark:text-red-400">
+          Session restore error: {sessionError.message}
+        </div>
+      )}
+
+      {!isSessionLoaded && (
+        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-600 dark:text-blue-400">
+          Restoring session...
+        </div>
+      )}
+
       <div className="border-b border-border px-4 py-3">
         <Toolbar
           text={text}
@@ -259,15 +357,8 @@ export const Editor = ({ onTextChange }: EditorProps) => {
             onStartRecording={startRecording}
             onStopRecording={stopRecording}
             onClearRecording={clearRecording}
-            performanceTrend={trend}
-            improvementRate={improvementRate}
             questionHistory={currentQuestionHistory}
-            isBookmarked={
-              currentQuestion
-                ? bookmarkedQuestions.has(currentQuestion.id)
-                : false
-            }
-            onBookmark={handleToggleBookmark}
+            evaluationError={critiqueError?.message || null}
           />
 
           <FeedbackPanel
@@ -336,7 +427,7 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           </Card>
 
           <div className="space-y-4">
-            {text.length > 0 && (
+            {text.length > 0 && !isInterviewMode && (
               <ToneBar tone={tone} isAnalyzing={isAnalyzing} text={text} />
             )}
 

@@ -20,6 +20,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Penly - Grammar Checker",
   description: "A simple, powerful grammar checker web application",
+    icons: {
+    icon: [
+      { url: "/sparkle.svg", type: "image/svg+xml" },    ],
+  },
 };
 
 export default function RootLayout({

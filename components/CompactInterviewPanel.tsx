@@ -2,11 +2,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Bookmark, Mic, Square } from "lucide-react";
+import { ChevronLeft, ChevronRight, Mic, Square, AlertCircle } from "lucide-react";
 import { InterviewQuestion, InterviewCritique } from "@/types/interview";
 import { EnhancedFeedback } from "@/components/JobInterviewFeedback";
-import { PerformanceTrends } from "@/components/PerformanceTrends";
-import { PerformanceTrend } from "@/hooks/usePerformanceAnalytics";
 import { QuestionHistory } from "@/hooks/useAnswerHistory";
 
 interface CompactInterviewPanelProps {
@@ -28,12 +26,10 @@ interface CompactInterviewPanelProps {
   onStartRecording?: () => Promise<void>;
   onStopRecording?: () => Promise<void>;
   onClearRecording?: () => void;
-  // Performance
-  performanceTrend?: PerformanceTrend;
-  improvementRate?: number;
+  // Question history
   questionHistory?: QuestionHistory | null;
-  isBookmarked?: boolean;
-  onBookmark?: () => void;
+  // Error handling
+  evaluationError?: string | null;
 }
 
 export const CompactInterviewPanel = ({
@@ -54,11 +50,8 @@ export const CompactInterviewPanel = ({
   onStartRecording,
   onStopRecording,
   onClearRecording,
-  performanceTrend,
-  improvementRate = 0,
   questionHistory,
-  isBookmarked = false,
-  onBookmark,
+  evaluationError,
 }: CompactInterviewPanelProps) => {
   if (!currentQuestion) return null;
 
@@ -66,6 +59,9 @@ export const CompactInterviewPanel = ({
     .trim()
     .split(/\s+/)
     .filter((w) => w.length > 0).length;
+
+  // Check if answer is complete: either has text OR has recorded audio
+  const hasCompleteAnswer = wordCount > 0 || recordedAudio !== null;
 
   const previousAttempts = questionHistory?.attempts || [];
   const bestPreviousScore =
@@ -75,8 +71,26 @@ export const CompactInterviewPanel = ({
 
   return (
     <div className="w-full space-y-3">
+      {evaluationError && (
+        <div className="px-3 py-2.5 border border-red-200 dark:border-red-800 rounded-md text-sm flex items-start gap-2">
+          <AlertCircle className="size-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+          <span className="text-red-700 dark:text-red-300">{evaluationError}</span>
+        </div>
+      )}
+
+      {isCritiquing && (
+        <div className="px-3 py-2.5 border border-blue-200 dark:border-blue-800 rounded-md text-sm flex items-center gap-2">
+          <div className="flex gap-1">
+            <div className="size-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="size-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="size-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+          <span className="text-blue-700 dark:text-blue-300">Evaluating your answer...</span>
+        </div>
+      )}
+
       <Card className="p-3 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
-        <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-start gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-md">
               Q{currentIndex + 1}/{totalQuestions}
@@ -84,23 +98,6 @@ export const CompactInterviewPanel = ({
             <span className="text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-md capitalize">
               {currentQuestion.category.replace("-", " ")}
             </span>
-          </div>
-          <div className="flex items-center gap-1">
-            {onBookmark && (
-              <button
-                onClick={onBookmark}
-                className={`p-1 rounded transition-colors ${
-                  isBookmarked
-                    ? "bg-amber-100 dark:bg-amber-900"
-                    : "hover:bg-blue-100 dark:hover:bg-blue-900"
-                }`}
-                title={isBookmarked ? "Bookmarked" : "Bookmark"}
-              >
-                <Bookmark
-                  className={`size-4 ${isBookmarked ? "fill-current text-amber-600 dark:text-amber-400" : "text-blue-600 dark:text-blue-400"}`}
-                />
-              </button>
-            )}
           </div>
         </div>
 
@@ -190,7 +187,7 @@ export const CompactInterviewPanel = ({
         {!critique ? (
           <Button
             onClick={onEvaluate}
-            disabled={isCritiquing || wordCount === 0}
+            disabled={isCritiquing || !hasCompleteAnswer}
             variant="default"
             size="sm"
             className="flex-1 text-sm"

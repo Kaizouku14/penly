@@ -46,7 +46,7 @@ export const Toolbar = ({
   return (
     <div className="flex flex-col gap-3 w-full md:flex-row md:items-center md:justify-between">
       <h2 className="text-sm font-semibold tracking-wide text-foreground">
-        {isJobMode ? "Job Mode" : "Grammar Checker"}
+        {isJobMode ? "Job Interview Mode" : "Grammar Checker"}
       </h2>
 
       <div className="flex flex-col gap-3 w-full md:w-auto md:flex-row md:items-center md:gap-3">
