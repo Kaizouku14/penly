@@ -1,13 +1,23 @@
-import { PDFParse } from "pdf-parse";
+import pdfParse from "pdf-parse";
 
+/**
+ * Extracts text from a PDF buffer
+ * Using pdf-parse (pure Node.js library)
+ */
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: buffer });
-  const result = await parser.getText();
-  const { text } = result;
+  try {
+    const data = await pdfParse(buffer);
+    const fullText = data.text;
 
-  if (!text || text.trim().length === 0) {
-    throw new Error("No text extracted from PDF");
+    if (!fullText || fullText.trim().length === 0) {
+      throw new Error("No text extracted from PDF");
+    }
+
+    return fullText.trim();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`PDF extraction failed: ${error.message}`);
+    }
+    throw new Error("PDF extraction failed: Unknown error");
   }
-
-  return text;
 }

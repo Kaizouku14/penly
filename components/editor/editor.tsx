@@ -23,6 +23,7 @@ import { CompactInterviewPanel } from "@/components/CompactInterviewPanel";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { parseInterviewQuestions } from "@/lib/utils/parseQuestions";
 import { useInterviewSessionStorage } from "@/hooks/useInterviewSessionStorage";
+import { toast } from "sonner";
 
 interface EditorProps {
   onTextChange?: (text: string) => void;
@@ -61,7 +62,13 @@ export const Editor = ({ onTextChange }: EditorProps) => {
     hasNextQuestion,
     hasPreviousQuestion,
   } = useInterviewMode();
-  const { critique, isCritiquing, error: critiqueError, fetchCritique, clearCritique } = useInterviewCritique();
+  const {
+    critique,
+    isCritiquing,
+    error: critiqueError,
+    fetchCritique,
+    clearCritique,
+  } = useInterviewCritique();
   const {
     isRecording,
     recordedAudio,
@@ -97,7 +104,8 @@ export const Editor = ({ onTextChange }: EditorProps) => {
 
       // Restore current question's answer
       if (currentQuestion && sessionData.resumeQuestions.length > 0) {
-        const currentQ = sessionData.resumeQuestions[sessionData.currentQuestionIndex];
+        const currentQ =
+          sessionData.resumeQuestions[sessionData.currentQuestionIndex];
         const storedAnswer = getAnswer(currentQ.id);
         if (storedAnswer) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -105,7 +113,15 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         }
       }
     }
-  }, [currentQuestion, enableInterviewMode, getAnswer, isInterviewMode, isSessionLoaded, sessionData, setCurrentQuestionIndex]);
+  }, [
+    currentQuestion,
+    enableInterviewMode,
+    getAnswer,
+    isInterviewMode,
+    isSessionLoaded,
+    sessionData,
+    setCurrentQuestionIndex,
+  ]);
 
   // Save answer to session storage whenever text or recording changes
   React.useEffect(() => {
@@ -116,7 +132,10 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         questionId: currentQuestion.id,
         text,
         timestamp: Date.now(),
-        wordCount: text.trim().split(/\s+/).filter((w) => w.length > 0).length,
+        wordCount: text
+          .trim()
+          .split(/\s+/)
+          .filter((w) => w.length > 0).length,
       });
     }, 1000); // Debounce saves
 
@@ -192,8 +211,32 @@ export const Editor = ({ onTextChange }: EditorProps) => {
         body: formData,
       });
 
+      // Check if the HTTP response is OK
+      if (!response.ok) {
+        toast.error(
+          "Failed to upload resume. Server returned: " + response.status,
+        );
+        return;
+      }
+
       const data = await response.json();
+
+      // Check if data.questions exists
+      if (!data.questions) {
+        toast.error("No interview questions generated. Please try again.");
+        return;
+      }
+
+      // Parse and validate questions
       const parsedQuestions = parseInterviewQuestions(data.questions);
+
+      // Check if any questions were parsed
+      if (!parsedQuestions || parsedQuestions.length === 0) {
+        toast.error(
+          "Failed to process interview questions. Please check your resume format.",
+        );
+        return;
+      }
 
       // Initialize session with new questions
       initializeSession(parsedQuestions);
@@ -201,7 +244,9 @@ export const Editor = ({ onTextChange }: EditorProps) => {
       setText("");
       setIsInterviewUploadDialogOpen(false);
     } catch (error) {
-      console.error("Error uploading resume:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Error uploading resume: " + errorMessage);
     } finally {
       setIsUploadingResume(false);
     }
@@ -218,19 +263,11 @@ export const Editor = ({ onTextChange }: EditorProps) => {
   };
 
   const handleEvaluateAnswer = async () => {
-    console.log("🔍 Evaluate button clicked");
-    console.log("Current question:", currentQuestion);
-    console.log("Text answer:", text);
-    console.log("Recorded audio:", recordedAudio);
-
     if (currentQuestion && text.trim()) {
-      console.log("📝 Evaluating text answer...");
       const result = await fetchCritique(currentQuestion.text, text);
-      console.log("✅ Critique result:", result);
 
       // Save answer to history
       if (result) {
-        console.log("💾 Saving to history...");
         saveAnswer(currentQuestion.id, text, result, recordedAudio?.duration);
 
         // Update session storage with critique
@@ -239,19 +276,25 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           text,
           critique: result,
           timestamp: Date.now(),
-          wordCount: text.trim().split(/\s+/).filter((w) => w.length > 0).length,
+          wordCount: text
+            .trim()
+            .split(/\s+/)
+            .filter((w) => w.length > 0).length,
         });
-      } else {
-        console.error("❌ No critique result returned");
       }
     } else if (currentQuestion && recordedAudio) {
-      console.log("🎤 Evaluating voice-only answer...");
-      const result = await fetchCritique(currentQuestion.text, `[Voice Recording: ${recordedAudio.duration}s]`);
-      console.log("✅ Critique result:", result);
+      const result = await fetchCritique(
+        currentQuestion.text,
+        `[Voice Recording: ${recordedAudio.duration}s]`,
+      );
 
       if (result) {
-        console.log("💾 Saving to history...");
-        saveAnswer(currentQuestion.id, `[Voice Response]`, result, recordedAudio.duration);
+        saveAnswer(
+          currentQuestion.id,
+          `[Voice Response]`,
+          result,
+          recordedAudio.duration,
+        );
 
         // Update session storage with critique and audio
         updateAnswer({
@@ -261,13 +304,7 @@ export const Editor = ({ onTextChange }: EditorProps) => {
           timestamp: Date.now(),
           wordCount: 0,
         });
-      } else {
-        console.error("❌ No critique result returned");
       }
-    } else {
-      console.error("❌ No text or audio to evaluate");
-      console.error("Text trimmed:", text.trim());
-      console.error("Has recorded audio:", !!recordedAudio);
     }
   };
 
@@ -372,7 +409,6 @@ export const Editor = ({ onTextChange }: EditorProps) => {
       ) : (
         <>
           <Card className="overflow-hidden">
-
             <CardContent className="p-0 relative h-56 lg:h-80 overflow-hidden">
               <div
                 ref={highlightLayerRef}
